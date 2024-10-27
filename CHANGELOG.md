@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.1.0] - 2024-10-25
+## [1.0.0] - 2024-10-25
 ### Added
 - Initial project setup with dynamic loading image gallery.
 - Daily stock screener using MACD, DIF, and EMA lines.
