@@ -30,7 +30,7 @@
    docker run -d --name stock-adviser-container -p 80:5000 -v image_gallery_volume:/app/static stock-adviser
 
 ## Accessing the application
-- Open your browser and navigate to http://localhost:5000 to access the image gallery and view daily stock screening results.
+- Open your browser and navigate to http://localhost:80 to access the image gallery and view daily stock screening results.
 
 ## Updating Daily
 - The project is designed to automatically analyze stock data daily. For continuous updates, make sure the Docker container is running and has access to the latest stock data in the mounted volume.
