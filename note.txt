@@ -1,0 +1,2 @@
+docker run -d -p 80:5000 --name image_gallery_container --mount source=image_gallery_volume,target=/app/static image-gallery-app
+

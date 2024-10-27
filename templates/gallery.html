@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Image Gallery</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Custom styles -->
+    <style>
+      body {
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+      }
+      .img-responsive {
+        width: 100%; /* Make image fit the container width */
+        height: auto; /* Maintain aspect ratio */
+      }
+      .image-container {
+        padding: 0; /* Remove padding around images */
+      }
+      .text-light {
+        font-size: 1.2rem; /* Adjust text size for visibility */
+      }
+    </style>
+  </head>
+  <body class="bg-secondary d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="container text-center">
+      <h2 class="text-light">Image Gallery</h2>
+      <p class="text-white-50" id="image-counter">Showing 10 of {{ total_images }} images</p>
+
+      <div class="row justify-content-center" id="image-gallery">
+        <!-- Initial images loaded here with index -->
+        {% for img in images %}
+          <div class="col-12 mb-1 image-container">
+            <p class="text-light">Image: {{ loop.index }}/{{ total_images }}</p>
+            <img src="{{ url_for('static', filename='images/' ~ img) }}" class="img-responsive">
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var index = 10;
+      var limit = 10;
+      var totalImages = {{ total_images }};
+      var date1 = {{ date }};
+
+      // Infinite scrolling
+      $(window).on("scroll", function() {
+        if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+          loadMoreImages(index, limit);
+          index += limit;
+        }
+      });
+
+      // Function to load more images
+      function loadMoreImages(startIndex, limit) {
+        $.get('/api/images?date='+ date1 + '&index=' + startIndex + '&limit=' + limit, (data) => {
+          data.images.forEach((imgUrl, i) => {
+            var imageElement = `
+              <div class="col-12 mb-1 image-container">
+                <p class="text-light">Image: ${startIndex + i + 1}/${totalImages}</p>
+                <img src="${imgUrl}"  class="img-responsive">
+              </div>
+            `;
+            $('#image-gallery').append(imageElement);
+          });
+
+          // Update image counter
+          $('#image-counter').text(`Showing ${Math.min(startIndex + data.images.length, totalImages)} of ${totalImages} images`);
+        });
+      }
+    </script>
+  </body>
+</html>
