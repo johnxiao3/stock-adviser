@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Slideshow - {{ date }}</title>
+    <style>
+        img { max-width: 100%; max-height: 500px; }
+        #gallery-container { text-align: center; margin: 20px; }
+        #nav-buttons { margin-top: 10px; }
+        button { padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Slideshow for {{ date }}</h1>
+    <div id="gallery-container">
+        <img id="galleryImage" src="" alt="Loading image...">
+    </div>
+    <div id="nav-buttons">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+    <p id="imageCounter">Image <span id="currentIndex">1</span> of {{ total_images }}</p>
+
+    <script>
+        const date = "{{ date }}";
+        let currentIndex = 0;
+        const totalImages = {{ total_images }};
+        
+        async function loadImage(index) {
+            try {
+                const response = await fetch(`/api/images?date=${date}&index=${index}&limit=1`);
+                const data = await response.json();
+                if (data.images.length > 0) {
+                    document.getElementById('galleryImage').src = data.images[0];
+                    document.getElementById('currentIndex').textContent = index + 1;
+                }
+            } catch (error) {
+                console.error("Error loading image:", error);
+            }
+        }
+
+        document.getElementById("prevBtn").addEventListener("click", () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadImage(currentIndex);
+            }
+        });
+
+        document.getElementById("nextBtn").addEventListener("click", () => {
+            if (currentIndex < totalImages - 1) {
+                currentIndex++;
+                loadImage(currentIndex);
+            }
+        });
+
+        // Keydown event listener for arrow keys
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft" && currentIndex > 0) {
+                currentIndex--;
+                loadImage(currentIndex);
+            } else if (event.key === "ArrowRight" && currentIndex < totalImages - 1) {
+                currentIndex++;
+                loadImage(currentIndex);
+            }
+        });
+
+        // Load the first image on page load
+        loadImage(currentIndex);
+    </script>
+</body>
+</html>

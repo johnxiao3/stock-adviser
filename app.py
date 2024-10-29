@@ -15,11 +15,10 @@ def get_image_paths(date):
         return []  # Return an empty list if the directory does not exist
     
     # List all .png files in the directory
-    image_files = [f for f in os.listdir(image_folder) if f.endswith('.png')]
+    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith('.png')])
     
     # Construct the full paths for the images
     image_paths = [os.path.join('/static','images', date, img) for img in image_files]  # e.g., 'images/20241025/image1.png'
-    print(image_paths[0])
     return image_paths
 
 @app.route('/')
@@ -32,10 +31,15 @@ def image_gallery(date):
     # Get the list of images in the specified subfolder
     image_folder = os.path.join(IMAGES_FOLDER, date)
     if os.path.exists(image_folder):
-        images = [os.path.join(date, img) for img in os.listdir(image_folder) if img.endswith('.png')]
+        images = sorted([os.path.join(date, img) for img in os.listdir(image_folder) if img.endswith('.png')])
         return render_template('gallery.html', images=images[:10], total_images=len(images),date=date)  # Load first 10 images
     else:
         return "Folder not found", 404
+    
+@app.route('/images1/<date>')
+def image_gallery_slide(date):
+    images = get_image_paths(date)
+    return render_template('gallery_slide.html', date=date, total_images=len(images))
 
 @app.route('/api/images')
 def api_images():

@@ -17,7 +17,8 @@
                     <a href="{{ url_for('image_gallery', date=folder) }}"  style="color: #5100ff;">
                         {{ folder }}
                     </a>
-                </li>
+
+                    <a href="{{ url_for('image_gallery_slide', date=folder) }}"> Slider </a>
             {% endfor %}
         </ul>
     </div>
