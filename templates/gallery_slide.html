@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <h1>Slideshow for {{ date }}</h1>
+    <h1>Slideshow for {{ date }} - <span id="currentIndex">1</span>/{{total_images}}:<span id="imageName">a.png</span></h1>
     <div id="gallery-container">
         <img id="galleryImage" src="" alt="Loading image...">
     </div>
@@ -33,6 +33,9 @@
                 if (data.images.length > 0) {
                     document.getElementById('galleryImage').src = data.images[0];
                     document.getElementById('currentIndex').textContent = index + 1;
+
+                    const fileName = data.images[0].split('/').pop();
+                    document.getElementById('imageName').textContent = fileName;
                 }
             } catch (error) {
                 console.error("Error loading image:", error);
