@@ -7,7 +7,9 @@
         img { max-width: 100%; max-height: 500px; }
         #gallery-container { text-align: center; margin: 20px; }
         #nav-buttons { margin-top: 10px; }
-        button { padding: 10px; }
+        button { padding: 15px 30px; font-size: 16px; margin: 5px; }
+        #homeBtn { background-color: #4CAF50; color: white; }
+        #prevBtn, #nextBtn { background-color: #008CBA; color: white; }
     </style>
 </head>
 <body>
@@ -16,6 +18,7 @@
         <img id="galleryImage" src="" alt="Loading image...">
     </div>
     <div id="nav-buttons">
+        <button id="homeBtn" onclick="window.location.href='/'">Home</button>
         <button id="prevBtn">Previous</button>
         <button id="nextBtn">Next</button>
     </div>
