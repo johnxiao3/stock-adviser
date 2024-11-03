@@ -28,6 +28,12 @@
 3. **Run the Docker Container:
    ```bash
    docker run -d --name stock-adviser-container -p 80:5000 -v image_gallery_volume:/app/static stock-adviser
+4. **After added the docker-compose.yml file you can use the command to re-build and run:
+   ```bash
+   docker compose up --build -d
+5. **Command to stop the deployment:
+   ```bash
+   docker compose down
 
 ## Accessing the application
 - Open your browser and navigate to http://localhost:80 to access the image gallery and view daily stock screening results.

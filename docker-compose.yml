@@ -1,0 +1,13 @@
+version: '3'
+services:
+  stock-adviser:
+    image: stock-adviser
+    container_name: stock-adviser-container
+    ports:
+      - "80:5000"
+    volumes:
+      - image_gallery_volume:/app/static
+    restart: always  # Optional: restart the container automatically
+
+volumes:
+  image_gallery_volume:

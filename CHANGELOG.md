@@ -1,4 +1,8 @@
 # Change Log
+## [1.0.0] - 2024-11-7
+### Feature added:
+- sort the png file 
+- add the docker-compose.yml file and update the readme
 
 ## [1.0.0] - 2024-10-25
 ### Added
