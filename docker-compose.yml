@@ -11,3 +11,5 @@ services:
 
 volumes:
   image_gallery_volume:
+    external: true  # Tell Docker to use an external (pre-existing) volume
+
