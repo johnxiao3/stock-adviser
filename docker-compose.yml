@@ -1,6 +1,9 @@
 version: '3'
 services:
   stock-adviser:
+    build:  # This section enables building the image
+      context: .  # Use the current directory as the build context
+      dockerfile: Dockerfile  # Optionally specify Dockerfile name if different
     image: stock-adviser
     container_name: stock-adviser-container
     ports:
