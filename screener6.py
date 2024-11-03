@@ -1,7 +1,8 @@
-import os
+import os,sys
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 from datetime import datetime
 from scipy.optimize import curve_fit
@@ -194,11 +195,11 @@ def analyze_and_plot_stocks(today, future_days=0):
     else:
         filtered_file = open(filtered_file_path1, 'w')
 
-    for idx, ticker in enumerate(tickers, start=1):
+    for idx, stockticker in enumerate(tickers, start=1):
         #if idx<415:
         #    continue
         note = ''
-        stock = yf.Ticker(ticker)
+        stock = yf.Ticker(stockticker)
         data = stock.history(period="6mo")
 
         # Get the info dictionary, which sometimes contains the 'country' key
@@ -272,7 +273,7 @@ def analyze_and_plot_stocks(today, future_days=0):
 
         try:
             MACD_hist_slope = (data_for_check['MACD_hist'].values[-1] - data_for_check['MACD_hist'].values[-3])/2
-            print(f'|{idx:>4}/{total_stocks}|{ticker:<5}|filter:{tot_filtered:<2}|{crossover_sign}{crossover_days:<2} days|slope:{MACD_hist_slope:>6.3f}|')
+            print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|filter:{tot_filtered:<2}|{crossover_sign}{crossover_days:<2} days|slope:{MACD_hist_slope:>6.3f}|')
         except:
             continue
         # Skip if not meeting criteria
@@ -305,7 +306,7 @@ def analyze_and_plot_stocks(today, future_days=0):
         if mse<0.02 and slope <-0.04: continue
 
         tot_filtered += 1
-        filtered_file.write(f"{ticker},{market_cap}\n")
+        filtered_file.write(f"{stockticker},{market_cap}\n")
         if filtered==0:continue
 
         # Fit line on MACD histogram
@@ -337,11 +338,6 @@ def analyze_and_plot_stocks(today, future_days=0):
 
         # Distinguish future days in the plot
         ax1.axvline(x=len(data) - 0.5-future_days, linestyle='--', color='blue', label='Today')
-
-        # Set title and format axes
-        #ax1.set_title(f'{ticker} - {MACD_hist_slope:.3f} - {crossover_days} Days - {note}')
-
-        ax1.grid(True, alpha=0.3)
 
 
         # Floating subplot for MACD histogram from crossover point
@@ -391,47 +387,47 @@ def analyze_and_plot_stocks(today, future_days=0):
         # Plot Williams %R
         ax4.plot(x_range, data['WR_6'], label='WR 6', color='purple', linestyle='-', linewidth=0.8,marker='.',markersize=3)
         ax4.plot(x_range, data['WR_10'], label='WR 10', color='red', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-        
         ax4.axhline(80, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
         ax4.axhline(20, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
 
 
         # Plot Volume
         #ax5 = ax3.twinx()  # Create a twin y-axis for volume
-        ax5.bar(x_range, data['Volume'], alpha=0.3, color='gray', label='Volume', width=0.5)
+        ax5.bar(x_range, data['Volume'], alpha=1, color=color_condition, label='Volume', width=0.75)
 
         # Formatting ax3
         ax3.axhline(70, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
         ax3.axhline(50, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
         ax3.set_ylabel('RSI', color='black')
         ax4.set_ylabel('WR', color='black')
-        ax5.set_ylabel('Volue', color='black')
+        ax5.set_ylabel('Volume', color='black')
 
-        #ax3_volume.set_ylabel('Volume', color='gray')
+ 
+        # Set minor grid for additional lines every two data points
+        for ax in [ax1,ax2, ax3, ax4, ax5]:
+            ax.grid(True, alpha=1)
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))  # Set minor grid every 2 data points
+            ax.grid(True, which='minor', alpha=0.5)  # Enable minor grid with desired transparency
 
-        # Set title and legend for ax3
-        #ax3.set_title('RSI, Williams %R, and Volume')
-        #ax3.legend(loc='upper left')
-        #ax3_volume.legend(loc='upper right')
-
-        # Show grid for ax3
-        ax2.grid(True, alpha=0.3)
-        ax3.grid(True, alpha=0.3)
-        ax4.grid(True, alpha=0.3)
-        ax4.grid(True, alpha=0.5)
 
         # Save plot
         rank_str = f"{idx:03}"
-        ax1.set_title(f'{rank_str}|{ticker}|{stock_capitalizations[idx-1][1]:.1f}B|MACD Slope: {MACD_hist_slope:.3f}|Crossover Days: {crossover_days}|EMA Slope: {slope:.3f}, Error: {mse:.3f} - Inc: {percentage_change:.1f}  - {decrease_percentage:.1f}- {note}')
+        ax1.set_title(f'{rank_str}|{stockticker}|{stock_capitalizations[idx-1][1]:.1f}B|MACD Slope: {MACD_hist_slope:.3f}|Crossover Days: {crossover_days}|EMA Slope: {slope:.3f}, Error: {mse:.3f} - Inc: {percentage_change:.1f}  - {decrease_percentage:.1f}- {note}')
 
         plt.tight_layout()
-        plt.savefig(f'./static/images/{today}/{rank_str}_{ticker}.png')
+        plt.savefig(f'./static/images/{today}/{rank_str}_{stockticker}.png')
         plt.close()
     filtered_file.close()
 
-def run_function_twices():
-    today = '20241031'
-    analyze_and_plot_stocks(today, future_days=1)
-    analyze_and_plot_stocks(today, future_days=1)
+def run_function_twices(deploy_mode):
+    if deploy_mode:
+        today = datetime.today().strftime('%Y%m%d')
+    else:
+        today = '20241101'
+    analyze_and_plot_stocks(today, future_days=0)
+    analyze_and_plot_stocks(today, future_days=0)
 
-run_function_twices()
+if len(sys.argv) > 1:
+    run_function_twices(1)
+else:
+    run_function_twices(0)
