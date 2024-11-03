@@ -1,7 +1,69 @@
 import os
 from flask import Flask, render_template,request,jsonify
 
+# app.py
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+import time
+import pytz
+
+
 app = Flask(__name__)
+scheduler = BackgroundScheduler()
+
+# Set timezone to EDT
+edt = pytz.timezone("America/New_York")
+
+# Variable to track the job status
+job_status = {
+    "last_run": None,
+    "next_run": None,
+    "time_until_next_run": None
+}
+
+def run_scheduled_task():
+    global job_status
+    # Run the main task
+    print("Running main task")
+    time.sleep(2)  # Simulate task duration
+    job_status["last_run"] = datetime.now(edt)
+
+    # Update the next run time (next business day)
+    next_run_time = get_next_business_day()
+    job_status["next_run"] = next_run_time
+    job_status["time_until_next_run"] = next_run_time - datetime.now(edt)
+
+# Function to calculate the next business day
+def get_next_business_day():
+    next_day = datetime.now(edt) + timedelta(days=1)
+    while next_day.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
+        next_day += timedelta(days=1)
+    return next_day.replace(hour=16, minute=40, second=0)  # Set desired time for the job
+
+next_run_time = get_next_business_day()
+# Set up the job
+scheduler.add_job(run_scheduled_task, 'interval', days=1, next_run_time=get_next_business_day())
+scheduler.start()
+# Initialize job status with the next run time
+job_status["next_run"] = next_run_time
+job_status["time_until_next_run"] = next_run_time - datetime.now(edt)
+
+
+# Endpoint to get job status
+@app.route('/status', methods=['GET'])
+def get_status():
+    if job_status["next_run"]:
+        job_status["time_until_next_run"] = job_status["next_run"] - datetime.now(edt)
+    
+    # Convert timedelta to string for JSON serialization
+    job_status["time_until_next_run"] = str(job_status["time_until_next_run"])
+    
+    return jsonify({
+        "last_run": job_status["last_run"].strftime("%Y-%m-%d %H:%M:%S %Z") if job_status["last_run"] else None,
+        "next_run": job_status["next_run"].strftime("%Y-%m-%d %H:%M:%S %Z") if job_status["next_run"] else None,
+        "time_until_next_run": job_status["time_until_next_run"]
+    })
+
 
 # Define the path to your images directory
 IMAGES_FOLDER = os.path.join('static', 'images')
