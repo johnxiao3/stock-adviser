@@ -430,8 +430,8 @@ def analyze_and_plot_stocks(today, future_days=0):
     filtered_file.close()
 
 def run_function_twices():
-    today = '20241101'
-    analyze_and_plot_stocks(today, future_days=0)
-    analyze_and_plot_stocks(today, future_days=0)
+    today = '20241031'
+    analyze_and_plot_stocks(today, future_days=1)
+    analyze_and_plot_stocks(today, future_days=1)
 
 run_function_twices()
