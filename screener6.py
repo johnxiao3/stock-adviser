@@ -149,9 +149,43 @@ def add_technical_indicators(data):
 
     return data
 
+def find_buy_sell_points(x_valid,y_valid,hist_valid):
+    # Initialize lists to hold the buy and sell points
+    buy_points = []
+    sell_points = []
+
+    # Loop through y_valid to find buy and sell points
+    i = 1
+    sellbuy = 0
+    while i < len(y_valid) - 2:
+        # Check for buy point
+        if sellbuy ==0 :
+            if (y_valid[i + 2] < 50 and
+                y_valid[i+1]>y_valid[i+2] and
+                y_valid[i]>y_valid[i+2] and
+                (y_valid[i]>50 or y_valid[i-1]>50) and
+                hist_valid[i+2]>hist_valid[i+1] and
+                (hist_valid[i]<0 or hist_valid[i]<hist_valid[i+1])):
+                buy_points.append(x_valid[i + 2])   # The second point is the buy point
+                i += 2  # Move to the point after the buy point
+                sellbuy = 1
+                continue
+        
+        # Check for sell point
+        if sellbuy == 1:
+            if (y_valid[i+2] > 50 and
+                y_valid[i+1]<y_valid[i+2] and
+                y_valid[i]<y_valid[i+2] and
+                hist_valid[i+2]<hist_valid[i+1]):
+                sell_points.append(x_valid[i + 2])  # The second point is the sell point
+                i += 2  # Move to the point after the sell point
+                sellbuy = 0
+                continue
+        
+        i += 1  # Move to the next point
+    return buy_points,sell_points
 
 def analyze_and_plot_stocks(today, future_days=0):
-
     # Define the number of future days to plot after today
     #future_days = 0  # Adjust as needed
     realtoday = datetime.today()
@@ -409,11 +443,26 @@ def analyze_and_plot_stocks(today, future_days=0):
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))  # Set minor grid every 2 data points
             ax.grid(True, which='minor', alpha=0.5)  # Enable minor grid with desired transparency
 
+        x_range = np.arange(len(data))
+        # Mask NaN values in 'WR_6' to get valid data points
+        meanWR = (data['WR_6']+data['WR_10'])/2
+        valid_mask = ~np.isnan(meanWR)
+        x_valid = x_range[valid_mask]           # Filtered x-values without NaNs
+        y_valid = meanWR[valid_mask]      # Filtered WR_6 values without NaNs
+        hist_valid = data['MACD_hist'][valid_mask]
+        buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
+
+        for bp in buy_points:
+            ax1.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
+            ax2.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
+        for sp in sell_points:
+            ax1.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
+            ax2.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
+
 
         # Save plot
         rank_str = f"{idx:03}"
         ax1.set_title(f'{rank_str}|{stockticker}|{stock_capitalizations[idx-1][1]:.1f}B|MACD Slope: {MACD_hist_slope:.3f}|Crossover Days: {crossover_days}|EMA Slope: {slope:.3f}, Error: {mse:.3f} - Inc: {percentage_change:.1f}  - {decrease_percentage:.1f}- {note}')
-
         plt.tight_layout()
         plt.savefig(f'./static/images/{today}/{rank_str}_{stockticker}.png')
         plt.close()
