@@ -23,7 +23,7 @@ def get_image_paths(date):
 
 @app.route('/')
 def home():
-    subfolders = [f.name for f in os.scandir(IMAGES_FOLDER) if f.is_dir()]
+    subfolders = sorted([f.name for f in os.scandir(IMAGES_FOLDER) if f.is_dir()],reversed=True)
     return render_template('home.html', subfolders=subfolders)
 
 @app.route('/images/<date>')
