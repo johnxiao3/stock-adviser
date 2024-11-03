@@ -1,3 +1,7 @@
 Flask
 apscheduler
 pytz
+pandas
+scipy
+yfinance
+matplotlib
