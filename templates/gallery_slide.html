@@ -9,7 +9,7 @@
         #nav-buttons { margin-top: 10px; }
         button { padding: 15px 30px; font-size: 16px; margin: 5px; }
         #homeBtn { background-color: #4CAF50; color: white; }
-        #prevBtn, #nextBtn { background-color: #008CBA; color: white; }
+        #prevBtn, #nextBtn, #downloadBtn { background-color: #008CBA; color: white; }
     </style>
 </head>
 <body>
@@ -21,6 +21,8 @@
         <button id="homeBtn" onclick="window.location.href='/'">Home</button>
         <button id="prevBtn">Previous</button>
         <button id="nextBtn">Next</button>
+        <button id="downloadBtn">Download Selected</button>
+
     </div>
     <p id="imageCounter">Image <span id="currentIndex">1</span> of {{ total_images }}</p>
 
@@ -68,6 +70,18 @@
                 currentIndex++;
                 loadImage(currentIndex);
             }
+        });
+
+        // Download button event
+        document.getElementById("downloadBtn").addEventListener("click", () => {
+            const txtFileName = `${date}_selected.txt`;
+            const filePath = `/static/images/${date}/${txtFileName}`;
+            const link = document.createElement("a");
+            link.href = filePath;
+            link.download = txtFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
 
         // Load the first image on page load
