@@ -9,7 +9,7 @@
         #nav-buttons { margin-top: 10px; }
         button { padding: 15px 30px; font-size: 16px; margin: 5px; }
         #homeBtn { background-color: #4CAF50; color: white; }
-        #prevBtn, #nextBtn, #downloadBtn { background-color: #008CBA; color: white; }
+        #firstBtn, #prevBtn, #nextBtn, #downloadBtn { background-color: #008CBA; color: white; }
     </style>
 </head>
 <body>
@@ -19,6 +19,8 @@
     </div>
     <div id="nav-buttons">
         <button id="homeBtn" onclick="window.location.href='/'">Home</button>
+        <button id="firstBtn">First</button>
+
         <button id="prevBtn">Previous</button>
         <button id="nextBtn">Next</button>
         <button id="downloadBtn">Download Selected</button>
@@ -46,7 +48,10 @@
                 console.error("Error loading image:", error);
             }
         }
-
+        document.getElementById("firstBtn").addEventListener("click", () => {
+            currentIndex = 0;
+            loadImage(currentIndex);
+        });
         document.getElementById("prevBtn").addEventListener("click", () => {
             if (currentIndex > 0) {
                 currentIndex--;

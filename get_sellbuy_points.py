@@ -10,48 +10,6 @@ import warnings
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
-# Define the cosine fitting function
-def cosine_fit(x, amplitude, frequency, phase):
-    return amplitude * np.cos(frequency * x + phase) + 0 #offset
-
-# Plot MACD histogram data in ax_floating with cosine fitting and zero-crossing points
-def plot_macd_histogram_with_cosine_fit(ax, macd_hist_data):
-    x_data = np.arange(len(macd_hist_data))
-    y_data = macd_hist_data
-
-    if (len(macd_hist_data)) == 3:
-        return 1
-
-    # Fit a cosine function to the MACD histogram data
-    try:
-        # Initial parameters: amplitude, frequency, phase, offset
-        initial_guess = [np.max(y_data) - np.min(y_data), 2 * np.pi / len(y_data), 0]
-        params, _ = curve_fit(cosine_fit, x_data, y_data, p0=initial_guess)
-
-        # Generate fitted y values using the cosine function
-        extended_x_data = np.arange(0, len(x_data) + int(np.pi / params[1]))  # Extend by π in frequency
-        fitted_y_data = cosine_fit(extended_x_data, *params)
-        
-        # Plot the MACD histogram and the fitted cosine curve
-        ax.plot(x_data, y_data, 'o-', label='MACD Histogram', markersize=4, color='purple', alpha=0.7)
-        ax.plot(extended_x_data, fitted_y_data, 'b--', label='Cosine Fit')
-
-        # Find zero-crossings and mark them
-        zero_crossings = np.where(np.diff(np.sign(y_data)))[0]
-        for crossing in zero_crossings:
-            ax.plot(crossing, y_data[crossing], 'ro', label='Zero Crossing' if crossing == zero_crossings[0] else "")
-        
-        fitted_y_original_range = cosine_fit(x_data, *params)
-        mse = np.mean((y_data - fitted_y_original_range) ** 2)
-        
-        # Annotate with fitting parameters if needed
-        amplitude, frequency, phase = params
-        ax.text(0.05, 0.95, f'Amp: {amplitude:.2f}, Freq: {frequency:.2f} Phase: {phase:.2f}\nMSE:{mse:.4f}',
-                transform=ax.transAxes, fontsize=8, verticalalignment='top')
-        
-    except RuntimeError:
-        print("Cosine fit failed; parameters may be unsuitable for fitting.")
-
 
 # Function to calculate EMA
 def ema(data, window):
@@ -146,7 +104,6 @@ def add_technical_indicators(data):
     # Ensure you have the volume data in your DataFrame
     if 'Volume' not in data.columns:
         raise ValueError("The DataFrame must contain a 'Volume' column.")
-
     return data
 
 def find_buy_sell_points(x_valid,y_valid,hist_valid):
@@ -348,6 +305,8 @@ def analyze_and_plot_stocks(today, future_days=0):
 
         add_technical_indicators(data)
 
+
+        '''
         # Plotting logic
         fig, (ax1, ax2,ax3,ax4,ax5) = plt.subplots(5, 1, figsize=(12, 8), 
                                     gridspec_kw={'height_ratios': [2, 1,1,1,1], 'hspace': 0}, 
@@ -374,18 +333,7 @@ def analyze_and_plot_stocks(today, future_days=0):
         ax1.axvline(x=len(data) - 0.5-future_days, linestyle='--', color='blue', label='Today')
 
 
-        # Floating subplot for MACD histogram from crossover point
-        '''
-        ax1_floating = fig.add_axes([0.15, 0.65, 0.3, 0.2]) 
-        macd_hist_data = data_for_check['MACD_hist'][last_crossover_idx:]
-        plot_macd_histogram_with_cosine_fit(ax1_floating, macd_hist_data)
-        macd_hist_data_future = data['MACD_hist'][-future_days:]
-        macd_hist_data_future_x = len(macd_hist_data)+np.arange(0,len(macd_hist_data_future))
-        if future_days !=0:
-            ax1_floating.plot(macd_hist_data_future_x, macd_hist_data_future,'o', color='red', markersize=4)
-        ax1_floating.grid(True, alpha=0.3)
-        ax1_floating.axhline(0, color='grey', linestyle='--', linewidth=0.8)  # Add y=0 line for reference
-        '''
+  
 
         # MACD and Fitted Line Plot
         x_range = range(len(data))
@@ -442,7 +390,7 @@ def analyze_and_plot_stocks(today, future_days=0):
             ax.grid(True, alpha=1)
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))  # Set minor grid every 2 data points
             ax.grid(True, which='minor', alpha=0.5)  # Enable minor grid with desired transparency
-
+        '''
         x_range = np.arange(len(data))
         # Mask NaN values in 'WR_6' to get valid data points
         meanWR = (data['WR_6']+data['WR_10'])/2
@@ -451,28 +399,30 @@ def analyze_and_plot_stocks(today, future_days=0):
         y_valid = meanWR[valid_mask]      # Filtered WR_6 values without NaNs
         hist_valid = data['MACD_hist'][valid_mask]
         buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
+        nearest_buy = x_valid[-1]-buy_points[-1]
+        print(nearest_buy)
 
+        '''
         for bp in buy_points:
             ax1.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
             ax2.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
         for sp in sell_points:
             ax1.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
             ax2.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-
-
         # Save plot
         rank_str = f"{idx:03}"
         ax1.set_title(f'{rank_str}|{stockticker}|{stock_capitalizations[idx-1][1]:.1f}B|MACD Slope: {MACD_hist_slope:.3f}|Crossover Days: {crossover_days}|EMA Slope: {slope:.3f}, Error: {mse:.3f} - Inc: {percentage_change:.1f}  - {decrease_percentage:.1f}- {note}')
         plt.tight_layout()
         plt.savefig(f'./static/images/{today}/{rank_str}_{stockticker}.png')
         plt.close()
+        '''
     filtered_file.close()
 
 def run_function_twices(deploy_mode):
     if deploy_mode:
         today = datetime.today().strftime('%Y%m%d')
     else:
-        today = '20241102'
+        today = '20241104'
     analyze_and_plot_stocks(today, future_days=0)
     analyze_and_plot_stocks(today, future_days=0)
 
