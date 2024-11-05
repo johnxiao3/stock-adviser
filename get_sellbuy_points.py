@@ -264,7 +264,6 @@ def analyze_and_plot_stocks(today, future_days=0):
 
         try:
             MACD_hist_slope = (data_for_check['MACD_hist'].values[-1] - data_for_check['MACD_hist'].values[-3])/2
-            print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|filter:{tot_filtered:<2}|{crossover_sign}{crossover_days:<2} days|slope:{MACD_hist_slope:>6.3f}|')
         except:
             continue
         # Skip if not meeting criteria
@@ -304,6 +303,17 @@ def analyze_and_plot_stocks(today, future_days=0):
         p, days_to_positive = fit_line_and_predict(data['MACD_hist'].values[-3:])
 
         add_technical_indicators(data)
+
+        x_range = np.arange(len(data))
+        # Mask NaN values in 'WR_6' to get valid data points
+        meanWR = (data['WR_6']+data['WR_10'])/2
+        valid_mask = ~np.isnan(meanWR)
+        x_valid = x_range[valid_mask]           # Filtered x-values without NaNs
+        y_valid = meanWR[valid_mask]      # Filtered WR_6 values without NaNs
+        hist_valid = data['MACD_hist'][valid_mask]
+        buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
+        nearest_buy = x_valid[-1]-buy_points[-1]
+        print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.0f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|{crossover_sign}{crossover_days:<2} days||')
 
 
         '''
@@ -391,16 +401,7 @@ def analyze_and_plot_stocks(today, future_days=0):
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))  # Set minor grid every 2 data points
             ax.grid(True, which='minor', alpha=0.5)  # Enable minor grid with desired transparency
         '''
-        x_range = np.arange(len(data))
-        # Mask NaN values in 'WR_6' to get valid data points
-        meanWR = (data['WR_6']+data['WR_10'])/2
-        valid_mask = ~np.isnan(meanWR)
-        x_valid = x_range[valid_mask]           # Filtered x-values without NaNs
-        y_valid = meanWR[valid_mask]      # Filtered WR_6 values without NaNs
-        hist_valid = data['MACD_hist'][valid_mask]
-        buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
-        nearest_buy = x_valid[-1]-buy_points[-1]
-        print(nearest_buy)
+
 
         '''
         for bp in buy_points:
