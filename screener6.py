@@ -6,9 +6,13 @@ import matplotlib.ticker as ticker
 import numpy as np
 from datetime import datetime
 from scipy.optimize import curve_fit
+import pytz
+# Set timezone to EDT
 import warnings
 # Ignore all warnings
 warnings.filterwarnings("ignore")
+# add edt
+edt = pytz.timezone("America/New_York")
 
 # Define the cosine fitting function
 def cosine_fit(x, amplitude, frequency, phase):
@@ -470,7 +474,7 @@ def analyze_and_plot_stocks(today, future_days=0):
 
 def run_function_twices(deploy_mode):
     if deploy_mode==1:
-        today = datetime.today().strftime('%Y%m%d')
+        today = datetime.today(edt).strftime('%Y%m%d')
         print('today',today)
     else:
         today = '20241101'
