@@ -469,8 +469,9 @@ def analyze_and_plot_stocks(today, future_days=0):
     filtered_file.close()
 
 def run_function_twices(deploy_mode):
-    if deploy_mode:
+    if deploy_mode==1:
         today = datetime.today().strftime('%Y%m%d')
+        print('today',today)
     else:
         today = '20241101'
     analyze_and_plot_stocks(today, future_days=0)
