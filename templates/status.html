@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 600px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
+        h1 { color: #007bff; }
+        .status-item { margin-bottom: 10px; font-size: 18px; }
+        .status-item span { font-weight: bold; }
+        .back-link { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .back-link:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h1>Job Status</h1>
+        <div class="status-item">
+            <span>Last Run:</span> {{ last_run }}
+        </div>
+        <div class="status-item">
+            <span>Next Run:</span> {{ next_run }}
+        </div>
+        <div class="status-item">
+            <span>Time Until Next Run:</span> {{ time_until_next_run }}
+        </div>
+        <a href="/" class="back-link">Back to Home</a>
+    </div>
+</body>
+</html>

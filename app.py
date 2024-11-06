@@ -36,12 +36,21 @@ def run_scheduled_task():
     job_status["next_run"] = next_run_time
     job_status["time_until_next_run"] = next_run_time - datetime.now(edt)
 
-# Function to calculate the next business day
+# Function to calculate the next business day with the desired time (16:40)
 def get_next_business_day():
-    next_day = datetime.now(edt) + timedelta(days=1)
-    while next_day.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
-        next_day += timedelta(days=1)
-    return next_day.replace(hour=16, minute=40, second=0)  # Set desired time for the job
+    now = datetime.now(edt)
+    # Set the desired run time for today
+    today_desired_time = now.replace(hour=16, minute=40, second=0, microsecond=0)
+
+    # If the current time is before today's desired time and it's a weekday, use today
+    if now < today_desired_time and now.weekday() < 5:  # 0-4 are weekdays
+        return today_desired_time
+    else:
+        # Otherwise, calculate the next business day
+        next_day = now + timedelta(days=1)
+        while next_day.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
+            next_day += timedelta(days=1)
+        return next_day.replace(hour=16, minute=40, second=0, microsecond=0)
 
 next_run_time = get_next_business_day()
 # Set up the job
@@ -60,12 +69,21 @@ def get_status():
     
     # Convert timedelta to string for JSON serialization
     job_status["time_until_next_run"] = str(job_status["time_until_next_run"])
+
+    last_run = job_status["last_run"].strftime("%Y-%m-%d %H:%M:%S %Z") if job_status["last_run"] else "N/A"
+    next_run = job_status["next_run"].strftime("%Y-%m-%d %H:%M:%S %Z") if job_status["next_run"] else "N/A"
+    time_until_next_run = str(job_status["time_until_next_run"])
+
     
+    '''
     return jsonify({
         "last_run": job_status["last_run"].strftime("%Y-%m-%d %H:%M:%S %Z") if job_status["last_run"] else None,
         "next_run": job_status["next_run"].strftime("%Y-%m-%d %H:%M:%S %Z") if job_status["next_run"] else None,
         "time_until_next_run": job_status["time_until_next_run"]
     })
+    '''
+    return render_template('status.html', last_run=last_run, next_run=next_run, time_until_next_run=time_until_next_run)
+
 
 
 # Define the path to your images directory
