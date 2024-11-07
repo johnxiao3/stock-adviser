@@ -10,6 +10,20 @@ import warnings
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
+import json
+
+def save_investment_data(investment_data, filename="investment_data.json"):
+    try:
+        # Write the investment data to a JSON file
+        with open(filename, 'w') as file:
+            json.dump(investment_data, file, indent=4)
+        print(f"Investment data saved to {filename}")
+    except Exception as e:
+        print(f"Error saving investment data: {e}")
+
+
+
+
 
 # Function to calculate EMA
 def ema(data, window):
@@ -110,7 +124,6 @@ def find_buy_sell_points(x_valid,y_valid,hist_valid):
     # Initialize lists to hold the buy and sell points
     buy_points = []
     sell_points = []
-
     # Loop through y_valid to find buy and sell points
     i = 1
     sellbuy = 0
@@ -142,7 +155,7 @@ def find_buy_sell_points(x_valid,y_valid,hist_valid):
         i += 1  # Move to the next point
     return buy_points,sell_points
 
-def analyze_and_plot_stocks(today, future_days=0):
+def find_selected_stocks(today, future_days=0):
     # Define the number of future days to plot after today
     #future_days = 0  # Adjust as needed
     realtoday = datetime.today()
@@ -185,7 +198,10 @@ def analyze_and_plot_stocks(today, future_days=0):
         filtered_file = open(filtered_file_path, 'w')
     else:
         filtered_file = open(filtered_file_path1, 'w')
-
+    selected_stock = {
+        "stock_prices": [],
+        "stock_tickers": []
+    }
     for idx, stockticker in enumerate(tickers, start=1):
         #if idx<415:
         #    continue
@@ -313,121 +329,72 @@ def analyze_and_plot_stocks(today, future_days=0):
         hist_valid = data['MACD_hist'][valid_mask]
         buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
         nearest_buy = x_valid[-1]-buy_points[-1]
-        print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.0f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|{crossover_sign}{crossover_days:<2} days||')
+        cap = stock_capitalizations[idx-1][1]
+        #print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.0f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|{crossover_sign}{crossover_days:<2} days||')
+        if cap < 10:break
+        if nearest_buy.item() == 0:
+            selected_stock['stock_prices'].append(today_close_price.item())
+            selected_stock['stock_tickers'].append(stockticker)
+            print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.0f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|')
 
-
-        '''
-        # Plotting logic
-        fig, (ax1, ax2,ax3,ax4,ax5) = plt.subplots(5, 1, figsize=(12, 8), 
-                                    gridspec_kw={'height_ratios': [2, 1,1,1,1], 'hspace': 0}, 
-                                    sharex=True)
-
-        # Plot candlestick data
-        plot_candlestick(ax1, data)
-
-        # Plot EMAs
-        for window in range(3, 26, 2):
-            ax1.plot(range(len(data)), data[f'EMA_{window}'], 
-                    label=f'EMA_{window}', 
-                    alpha=0.5 if window != 3 else 1,
-                    linewidth=2 if window == 3 else 1, color='green')
-        for window in range(27, 52, 2):
-            ax1.plot(range(len(data)), data[f'EMA_{window}'], 
-                    label=f'EMA_{window}', 
-                    alpha=0.5 if window != 3 else 1,
-                    linewidth=2 if window == 3 else 1, color='red')
-        # Plot fitted EMA line
-        ax1.plot(range(last_crossover_idx, len(data_for_check)), fit_values, 'b--', label=f'EMA Fit Slope: {slope:.3f}, MSE: {mse:.3f}')
-
-        # Distinguish future days in the plot
-        ax1.axvline(x=len(data) - 0.5-future_days, linestyle='--', color='blue', label='Today')
-
-
-  
-
-        # MACD and Fitted Line Plot
-        x_range = range(len(data))
-        ax2.plot(x_range, data['MACD'], label='MACD', color='blue')
-        ax2.plot(x_range, data['MACD_signal'], label='Signal', color='orange')
-
-        # Plot MACD Histogram with Color Conditions
-        color_condition = np.where(data['Close'].diff() > 0, 'green', 'red')
-        ax2.bar(x_range, data['MACD_hist'], color=color_condition)
-        ax2.axhline(0, color='black', linewidth=1, linestyle='-')
-        ax2.axvline(x=len(data) - 0.5- future_days, linestyle='--', color='blue', label='Today')
-
-        # Extend x-axis with future dates and set custom format
-        ax2.set_xlim([0, len(extended_dates) - 1])
-        ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: format_date(x, p, trading_dates)))
-        plt.setp(ax2.xaxis.get_majorticklabels(), rotation=0, ha='right')
-
-        # Show tick markers every `n_ticks` intervals
-        n_ticks = 10
-        tick_locations = np.linspace(0, len(data)-1 -future_days, n_ticks, dtype=int)
-        ax2.set_xticks(tick_locations)
-        ax2.set_xticklabels([extended_dates[i].strftime('%Y-%m-%d') for i in tick_locations], rotation=0, ha='right')
-
-
-        # New subplot for RSI, WR, and Volume
-        #ax3 = fig.add_subplot(3, 1, 3)  # Create a new subplot below ax2
-
-        # Plot RSI
-        ax3.plot(x_range, data['RSI_6'], label='RSI 6', color='blue', linestyle='-',linewidth=0.8,marker='.',markersize=3)
-        ax3.plot(x_range, data['RSI_12'], label='RSI 12', color='orange', linestyle='-',linewidth=0.8,marker='.',markersize=3)
-        ax3.plot(x_range, data['RSI_24'], label='RSI 24', color='green', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-
-        # Plot Williams %R
-        ax4.plot(x_range, data['WR_6'], label='WR 6', color='purple', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-        ax4.plot(x_range, data['WR_10'], label='WR 10', color='red', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-        ax4.axhline(80, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
-        ax4.axhline(20, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
-
-
-        # Plot Volume
-        #ax5 = ax3.twinx()  # Create a twin y-axis for volume
-        ax5.bar(x_range, data['Volume'], alpha=1, color=color_condition, label='Volume', width=0.75)
-
-        # Formatting ax3
-        ax3.axhline(70, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
-        ax3.axhline(50, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
-        ax3.set_ylabel('RSI', color='black')
-        ax4.set_ylabel('WR', color='black')
-        ax5.set_ylabel('Volume', color='black')
-
- 
-        # Set minor grid for additional lines every two data points
-        for ax in [ax1,ax2, ax3, ax4, ax5]:
-            ax.grid(True, alpha=1)
-            ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))  # Set minor grid every 2 data points
-            ax.grid(True, which='minor', alpha=0.5)  # Enable minor grid with desired transparency
-        '''
-
-
-        '''
-        for bp in buy_points:
-            ax1.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            ax2.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-        for sp in sell_points:
-            ax1.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            ax2.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-        # Save plot
-        rank_str = f"{idx:03}"
-        ax1.set_title(f'{rank_str}|{stockticker}|{stock_capitalizations[idx-1][1]:.1f}B|MACD Slope: {MACD_hist_slope:.3f}|Crossover Days: {crossover_days}|EMA Slope: {slope:.3f}, Error: {mse:.3f} - Inc: {percentage_change:.1f}  - {decrease_percentage:.1f}- {note}')
-        plt.tight_layout()
-        plt.savefig(f'./static/images/{today}/{rank_str}_{stockticker}.png')
-        plt.close()
-        '''
     filtered_file.close()
+    return selected_stock
 
-def run_function_twices(deploy_mode):
+def generate_investment_plan(selected_stock, budget):
+    """
+    Generates an investment plan based on available stock prices and a budget.
+    
+    Parameters:
+        selected_stock (dict): Dictionary with 'stock_prices' and 'stock_tickers' lists.
+        budget (float): The amount of money available for investment.
+    
+    Returns:
+        list: A list of dictionaries, each containing 'ticker', 'price', 'quantity', and 'total_cost'.
+        float: Remaining budget after purchases.
+    """
+    investment_plan = []  # List to store the stocks bought and quantity
+
+    # Loop through stocks in order
+    for price, ticker in zip(selected_stock['stock_prices'], selected_stock['stock_tickers']):
+        if budget >= price:  # Check if we have enough budget to buy at least one share
+            quantity = int(budget // price)  # Max shares that can be bought for this stock
+            cost = quantity * price          # Total cost for these shares
+            budget -= cost                   # Deduct the cost from the budget
+
+            # Add to investment plan
+            investment_plan.append({
+                'ticker': ticker,
+                'price': price,
+                'quantity': quantity,
+                'total_cost': cost
+            })
+
+    return investment_plan, budget
+
+def get_buy_stocks(deploy_mode):
     if deploy_mode:
         today = datetime.today().strftime('%Y%m%d')
     else:
-        today = '20241104'
-    analyze_and_plot_stocks(today, future_days=0)
-    analyze_and_plot_stocks(today, future_days=0)
+        today = '20241106'
+    selected_stock = find_selected_stocks(today, future_days=0)
+    budget = 1000
+    # Call the function to get the investment plan
+    investment_plan, remaining_budget = generate_investment_plan(selected_stock, budget)
+
+    # Display the investment plan
+    print("Investment Plan:")
+    for stock in investment_plan:
+        print(f"Buy {stock['quantity']} shares of {stock['ticker']} at ${stock['price']:.2f} each")
+        print(f"Total Cost: ${stock['total_cost']:.2f}")
+    print(f"Remaining Budget: ${remaining_budget:.2f}")
+
+
+    # Save the investment data to a file
+    save_investment_data(investment_plan,'./static/investment_data.json')
+
+
 
 if len(sys.argv) > 1:
-    run_function_twices(1)
+    get_buy_stocks(1)
 else:
-    run_function_twices(0)
+    get_buy_stocks(0)
