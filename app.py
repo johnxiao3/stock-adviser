@@ -25,6 +25,7 @@ def run_scheduled_task():
     global job_status
     # Run job_script.py as a detached process
     subprocess.Popen(['python3', 'screener6.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.Popen(['python3', 'check_selling_status.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Run the main task
     print("Running main task")
