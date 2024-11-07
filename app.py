@@ -85,6 +85,16 @@ def get_status():
     '''
     return render_template('status.html', last_run=last_run, next_run=next_run, time_until_next_run=time_until_next_run)
 
+@app.route('/log')
+def log_page():
+    log_file_path = os.path.join(app.static_folder, 'log.txt')  # Path to the log file in /static
+    try:
+        with open(log_file_path, 'r') as file:
+            log_content = file.read()
+    except FileNotFoundError:
+        log_content = "Log file not found."
+    
+    return render_template('log_page.html', log_content=log_content)
 
 
 # Define the path to your images directory

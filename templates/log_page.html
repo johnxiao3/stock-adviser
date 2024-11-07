@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Viewer</title>
+    <style>
+        /* General page layout */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            white-space: pre-wrap; /* To wrap the text */
+            word-wrap: break-word; /* Break long lines */
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto; /* Scrollable area */
+        }
+
+        .back-link { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .back-link:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Log File Viewer</h1>
+    </header>
+    <div class="container">
+        <h2>Content of log.txt</h2>
+        <pre>{{ log_content }}</pre>
+        <a href="/" class="back-link">Back to Home</a>
+    </div>
+</body>
+</html>
