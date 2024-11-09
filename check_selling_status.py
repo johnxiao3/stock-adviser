@@ -13,6 +13,33 @@ warnings.filterwarnings("ignore")
 
 import json
 
+def delete_stock(ticker, filename="./static/investment_data.json"):
+    # Load the current JSON data from the file
+    try:
+        with open(filename, 'r') as file:
+            stock_data = json.load(file)
+    except FileNotFoundError:
+        print(f"Error: {filename} not found.")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: {filename} contains invalid JSON.")
+        return
+
+    # Find and delete the stock with the given ticker
+    updated_data = [stock for stock in stock_data if stock["ticker"] != ticker]
+    
+    if len(updated_data) == len(stock_data):
+        print(f"No stock with ticker {ticker} found.")
+        return
+    
+    # Write the updated data back to the JSON file
+    with open(filename, 'w') as file:
+        json.dump(updated_data, file, indent=4)
+
+    print(f"Stock with ticker {ticker} deleted successfully.")
+
+
+
 # Function to log the information to a file
 def log_to_file(log_message, log_file='./static/log.txt'):
     # Ensure the log directory exists
@@ -52,10 +79,6 @@ def get_tickers_from_json(filename="./static/investment_data.json"):
     except KeyError:
         print(f"Error: Missing 'ticker' field in one of the stock entries.")
         return []
-
-
-
-
 
 # Function to calculate EMA
 def ema(data, window):
@@ -102,12 +125,6 @@ def plot_candlestick(ax, data):
                                  abs(close_price - open_price),
                                  color='green' if close_price >= open_price else 'red', 
                                  alpha=1.0,zorder=2))
-
-# Function to create custom date formatter for x-axis
-def format_date(x, p, trading_dates):
-    if x >= 0 and x < len(trading_dates):
-        return trading_dates[int(x)].strftime('%Y-%m-%d')
-    return ''
 
 # Function to fit line for EMA and calculate slope and error
 def fit_ema_line(data, start_idx, end_idx):
@@ -169,7 +186,7 @@ def find_buy_sell_points(x_valid,y_valid,hist_valid):
                 hist_valid[i+2]>hist_valid[i+1] and
                 (hist_valid[i]<0 or hist_valid[i]<hist_valid[i+1])):
                 buy_points.append(x_valid[i + 2])   # The second point is the buy point
-                i += 2  # Move to the point after the buy point
+                #i += 2  # Move to the point after the buy point
                 sellbuy = 1
                 continue
         
@@ -180,7 +197,7 @@ def find_buy_sell_points(x_valid,y_valid,hist_valid):
                 y_valid[i]<y_valid[i+2] and
                 hist_valid[i+2]<hist_valid[i+1]):
                 sell_points.append(x_valid[i + 2])  # The second point is the sell point
-                i += 2  # Move to the point after the sell point
+                #i += 2  # Move to the point after the sell point
                 sellbuy = 0
                 continue
         
@@ -188,17 +205,12 @@ def find_buy_sell_points(x_valid,y_valid,hist_valid):
     return buy_points,sell_points
 
 def find_sell_stocks(today, future_days=0):
-
     realtoday = datetime.today()
     today_date = datetime.strptime(today, '%Y%m%d')
-
     time_delta = (realtoday-today_date).days
-
     # Example usage
     tickers = get_tickers_from_json()
     print("Stock Tickers:", tickers)
-
-    
 
     total_stocks = len(tickers)
     
@@ -207,9 +219,6 @@ def find_sell_stocks(today, future_days=0):
         "stock_tickers": []
     }
     for idx, stockticker in enumerate(tickers, start=1):
-        #if idx<415:
-        #    continue
-        note = ''
         stock = yf.Ticker(stockticker)
         data = stock.history(period="6mo")
 
@@ -236,11 +245,8 @@ def find_sell_stocks(today, future_days=0):
         except:
             continue
 
-        # Store trading dates for x-axis formatting
-        trading_dates = data.index.tolist()
 
-        # Append future dates for plotting
-        future_dates = pd.date_range(start=trading_dates[-1], periods=2 + 1)[1:]
+
 
         # Calculate EMAs and MACD
         for window in range(3, 26, 2):
@@ -258,24 +264,6 @@ def find_sell_stocks(today, future_days=0):
         
         # Calculate the daily percentage change
         data['Pct_Change'] = data['Close'].pct_change() * 100  # Convert to percentage
-
-        
-
-        # Proceed with your conditions and analysis logic here as before
-        # Calculate crossover days
-        last_crossover_idx, crossover_sign = calculate_crossover_days(data_for_check['MACD_hist'].values)
-        if last_crossover_idx is not None:
-            crossover_days = len(data_for_check) - last_crossover_idx
-        else:
-            crossover_days = 'N/A'
-
-
-        # Skip if not meeting criteria
-        if (crossover_sign != '-' or crossover_days == 'N/A' or
-            data_for_check['MACD_hist'].values[-3:][0] > 0 or 
-            data_for_check['MACD_hist'].values[-3:][-1] > 0 or
-            not all(np.diff(data_for_check['MACD_hist'].values[-3:]) > 0)):
-            continue
 
         # Check EMA conditions
         current_day_idx = -1
@@ -306,13 +294,11 @@ def find_sell_stocks(today, future_days=0):
 
     return selected_stock
 
-
-
 def check_holding_stocks(deploy_mode):
     if deploy_mode:
         today = datetime.today().strftime('%Y%m%d')
     else:
-        today = '20241106'
+        today = '20241108'
     selected_stock = find_sell_stocks(today, future_days=0)
     # Example logic to print and log the message
     if len(selected_stock['stock_tickers']) == 0:
@@ -323,6 +309,8 @@ def check_holding_stocks(deploy_mode):
         log_to_file(log_message)
         print('Stocks below need to be selled')
         print(selected_stock['stock_tickers'])
+        for stock_ticker in selected_stock['stock_tickers']:
+            delete_stock(stock_ticker)
 
 if len(sys.argv) > 1:
     check_holding_stocks(1)
