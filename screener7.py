@@ -7,7 +7,7 @@ import numpy as np
 from datetime import datetime
 from scipy.optimize import curve_fit
 import pytz
-# Set timezone to EDT
+from post_filtered import run_post_process
 import warnings
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -547,6 +547,8 @@ def run_function_twices(deploy_mode):
     else:
         today = '20241108'
     analyze_and_plot_stocks(today, future_days=0)
+    if deploy_mode == 1:
+        run_post_process(1)
 
 if len(sys.argv) > 1:
     run_function_twices(1)

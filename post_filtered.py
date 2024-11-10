@@ -517,16 +517,16 @@ def analyze_and_plot_stocks(today, future_days=0):
         plt.close()
     filtered_file.close()
 
-def run_function_twices(deploy_mode):
+def run_post_process(deploy_mode):
     if deploy_mode==1:
         today = datetime.now(edt).strftime('%Y%m%d')
         print('today',today)
-        analyze_and_plot_stocks(today, future_days=0)
     else:
         today = '20241108'
     analyze_and_plot_stocks(today, future_days=0)
 
-if len(sys.argv) > 1:
-    run_function_twices(1)
-else:
-    run_function_twices(0)
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        run_post_process(1)
+    else:
+        run_post_process(0)
