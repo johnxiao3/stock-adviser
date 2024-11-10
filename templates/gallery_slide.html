@@ -194,17 +194,23 @@
             margin: 10px 0;
             font-size: 1.2em;
         }
+
+        .starred-count {
+            background-color: #FFD700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="header-container">
-        
-
         <div class="title">
-        
-        
             <div class="control-panel">
-                Slideshow for {{ date }} - <span id="currentIndex">1</span>/<span id="totalCount">{{total_images}}</span>: <span id="imageName">a.png</span>
+                Slideshow for {{ date }} - <span id="currentIndex">1</span>/<span id="totalCount">{{total_images}}</span>
+                <span class="starred-count">Starred: <span id="starredCount">0</span></span>
+                : <span id="imageName">a.png</span>
 
                 <div class="filter-container">
                     <label class="switch">
@@ -222,7 +228,6 @@
                     <button id="downloadBtn">Download Selected</button>
                 </div>
             </div>
-        
         </div>
     </div>
 
@@ -233,12 +238,12 @@
             <button id="starBtn">⭐</button>
         </div>
         <div class="star-rating" id="starRating">
-                <span class="star" data-rating="1">★</span>
-                <span class="star" data-rating="2">★</span>
-                <span class="star" data-rating="3">★</span>
-                <span class="star" data-rating="4">★</span>
-                <span class="star" data-rating="5">★</span>
-            </div>
+            <span class="star" data-rating="1">★</span>
+            <span class="star" data-rating="2">★</span>
+            <span class="star" data-rating="3">★</span>
+            <span class="star" data-rating="4">★</span>
+            <span class="star" data-rating="5">★</span>
+        </div>
         <div class="image-wrapper" id="imageWrapper">
             <img id="galleryImage" src="" alt="Loading image...">
         </div>
@@ -254,10 +259,29 @@
         let showingStarredOnly = false;
         let imageRatings = new Map();
 
-        function loadStarredImages() {
-            const saved = localStorage.getItem(`starred-${date}`);
-            if (saved) {
-                starredImages = new Set(JSON.parse(saved));
+        function updateStarredCount() {
+            const starredCount = document.getElementById('starredCount');
+            starredCount.textContent = starredImages.size;
+        }
+
+        async function fetchDataFromServer() {
+            try {
+                const response = await fetch(`/api/get-starred?date=${date}`);
+                const data = await response.json();
+                //console.log("Received data from server:", data); // Add logging
+
+                // Initialize starred images and ratings
+                starredImages = new Set(data.starred || []); // Add fallback empty array
+                imageRatings = new Map(Object.entries(data.ratings || {})); // Add fallback empty object
+
+                //console.log("Starred images count:", starredImages.size); // Add logging
+                updateStarredCount();
+                updateFilteredImages();
+                saveStarredImages();
+                saveRatings();
+
+            } catch (error) {
+                console.error("Error fetching data from server:", error);
             }
         }
 
@@ -272,26 +296,15 @@
             localStorage.setItem(`ratings-${date}`, JSON.stringify([...imageRatings]));
         }
 
-        function saveStarredImages() {
-            localStorage.setItem(`starred-${date}`, JSON.stringify([...starredImages]));
+        function loadStarredImages() {
+            const saved = localStorage.getItem(`starred-${date}`);
+            if (saved) {
+                starredImages = new Set(JSON.parse(saved));
+            }
         }
 
-        async function saveToServer() {
-            try {
-                await fetch('/api/save-starred', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        date: date,
-                        starred: [...starredImages],
-                        ratings: Object.fromEntries(imageRatings)
-                    })
-                });
-            } catch (error) {
-                console.error("Error saving data:", error);
-            }
+        function saveStarredImages() {
+            localStorage.setItem(`starred-${date}`, JSON.stringify([...starredImages]));
         }
 
         function updateStarRating(fileName) {
@@ -326,7 +339,8 @@
                     },
                     body: JSON.stringify({
                         date: date,
-                        starred: [...starredImages]
+                        starred: [...starredImages],
+                        ratings: Object.fromEntries(imageRatings)
                     })
                 });
             } catch (error) {
@@ -338,16 +352,13 @@
             const wrapper = document.getElementById('imageWrapper');
             wrapper.style.transform = `scale(${zoomLevel})`;
             
-            // Calculate the position adjustment for controls
             const imageControls = document.getElementById('image-controls');
             const wrapper_rect = wrapper.getBoundingClientRect();
             const scale_offset = (zoomLevel - 1) * wrapper_rect.width / 2;
             
             if (zoomLevel > 1) {
-                // Move controls with the zoomed image edge
                 imageControls.style.right = `${10 + scale_offset}px`;
             } else {
-                // Reset to original position
                 imageControls.style.right = '10px';
             }
         }
@@ -361,19 +372,15 @@
                     galleryImage.src = data.images[0];
                     updateZoom();
 
-                    // Update the current index display based on filter mode
                     if (showingStarredOnly) {
-                        // When showing starred images, display sequential numbers from 1
                         document.getElementById('currentIndex').textContent = currentIndex + 1;
                     } else {
-                        // When showing all images, display actual image index + 1
                         document.getElementById('currentIndex').textContent = index + 1;
                     }
 
                     const fileName = data.images[0].split('/').pop();
                     document.getElementById('imageName').textContent = fileName;
 
-                    // Update star button appearance
                     const starBtn = document.getElementById('starBtn');
                     if (starredImages.has(fileName)) {
                         starBtn.classList.add('starred');
@@ -407,12 +414,10 @@
             }
         }
 
-        // Initialize
         loadStarredImages();
         loadRatings();
         updateFilteredImages();
 
-        // Event Listeners
         document.getElementById("filterSwitch").addEventListener("change", (e) => {
             showingStarredOnly = e.target.checked;
             document.getElementById("filterLabel").textContent = 
@@ -427,6 +432,7 @@
             } else {
                 starredImages.add(fileName);
             }
+            updateStarredCount();
             saveStarredImages();
             await saveStarredToServer();
             document.getElementById("starBtn").classList.toggle('starred');
@@ -493,10 +499,13 @@
             document.body.removeChild(link);
         });
 
-        // Load the first image on page load
-        loadImage(filteredImageIndices[0]);
-        loadStarredImages();
-        loadRatings();
+        // Initialize on page load
+        async function initializeGallery() {
+            await fetchDataFromServer();
+            loadImage(filteredImageIndices[0]);
+        }
+
+        initializeGallery();
     </script>
 </body>
 </html>

@@ -168,6 +168,37 @@ def save_starred():
         json.dump(save_data, f)
     
     return jsonify({'success': True})
+# This is an example function to read starred images and ratings from a JSON file.
+def load_starred_data(date):
+    try:
+        # Assume we have a JSON file storing starred data by date.
+        # File format: { "2024-11-08": { "starred": ["image1.png", "image2.png"], "ratings": {"image1.png": 4, "image2.png": 5} } }
+        
+        filepath = os.path.join('static', 'images', date, 'starred.json')
+        #print(date,filepath)
+        with open(filepath, 'r') as file:
+            data = json.load(file)
+        #print(data)
+        return data #data.get(date, {"starred": [], "ratings": {}})
+    except FileNotFoundError:
+        return {"starred": [], "ratings": {}}
+
+@app.route('/api/get-starred', methods=['GET'])
+def get_starred():
+    # Retrieve date from query parameters
+    date = request.args.get('date')
+    if not date:
+        return jsonify({"error": "Date parameter is required"}), 400
+
+    # Load starred data for the specified date
+    starred_data = load_starred_data(date)
+    
+    # Return JSON response with starred images and ratings
+    response = {
+        "starred": starred_data["starred"],
+        "ratings": starred_data["ratings"]
+    }
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", threaded=True)
