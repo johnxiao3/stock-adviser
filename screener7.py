@@ -400,7 +400,6 @@ def analyze_and_plot_stocks(today, future_days=0):
         if mse<0.02 and slope <-0.04: continue
 
         tot_filtered += 1
-        filtered_file.write(f"{stockticker},{market_cap}\n")
         if filtered==0:continue
 
         # Fit line on MACD histogram
@@ -420,11 +419,13 @@ def analyze_and_plot_stocks(today, future_days=0):
         nearest_buy = x_valid[-1]-buy_points[-1]
         nearest_buy7 = x_valid[-1]-buy_points7[-1]
 
-        if nearest_buy!=0 and nearest_buy7!=0:
+        if nearest_buy>1 and nearest_buy7>1:
             continue
+        min_buy = min(nearest_buy,nearest_buy7)
         sel_idx+=1
-        print(f'|{sel_idx:>4}/{total_stocks}|{stockticker:<5}|filter:{tot_filtered:<2}|{crossover_sign}{crossover_days:<2} days|slope:{MACD_hist_slope:>6.3f}|')
-
+        print(f'|{sel_idx:>4}/{total_stocks}|{stockticker:<5}|f:{tot_filtered:<2}|{stock_capitalizations[idx-1][1]:<3.1f}B|BP:{min_buy}')
+        filtered_file.write(f"{stockticker},{market_cap}\n")
+        continue
         # Plotting logic
         fig, (ax1, ax2,ax3,ax4,ax5) = plt.subplots(5, 1, figsize=(12, 8), 
                                     gridspec_kw={'height_ratios': [2, 1,1,1,1], 'hspace': 0}, 
@@ -531,7 +532,7 @@ def analyze_and_plot_stocks(today, future_days=0):
 
 
         # Save plot
-        rank_str = f"{idx:03}"
+        rank_str = f"{sel_idx:03}"
         ax1.set_title(f'{rank_str}|{stockticker}|{stock_capitalizations[idx-1][1]:.1f}B|MACD Slope: {MACD_hist_slope:.3f}|Crossover Days: {crossover_days}|EMA Slope: {slope:.3f}, Error: {mse:.3f} - Inc: {percentage_change:.1f}  - {decrease_percentage:.1f}- {note}')
         plt.tight_layout()
         plt.savefig(f'./static/images/{today}/{rank_str}_{stockticker}.png')
@@ -544,7 +545,7 @@ def run_function_twices(deploy_mode):
         print('today',today)
         analyze_and_plot_stocks(today, future_days=0)
     else:
-        today = '20241107'
+        today = '20241108'
     analyze_and_plot_stocks(today, future_days=0)
 
 if len(sys.argv) > 1:

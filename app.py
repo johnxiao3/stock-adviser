@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 import time
 import pytz
-
+import json
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -149,6 +149,19 @@ def api_images():
         'images': images[index:index + limit],
         'total_images': total_images
     })
+
+@app.route('/api/save-starred', methods=['POST'])
+def save_starred():
+    data = request.json
+    date = data['date']
+    starred_images = data['starred']
+    
+    # Save to a file in the same directory as the images
+    filepath = os.path.join('static', 'images', date, 'starred.json')
+    with open(filepath, 'w') as f:
+        json.dump(starred_images, f)
+    
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", threaded=True)
