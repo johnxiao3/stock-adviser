@@ -97,8 +97,8 @@ def plot_candlestick(ax, data):
         
         # Use integer index instead of date
         ax.plot([idx, idx], [low_price, high_price], color='black',linewidth=1,zorder=1)
-        ax.add_patch(plt.Rectangle((idx - 0.2, min(open_price, close_price)), 
-                                 0.4, 
+        ax.add_patch(plt.Rectangle((idx - 0.3, min(open_price, close_price)), 
+                                 0.6, 
                                  abs(close_price - open_price),
                                  color='green' if close_price >= open_price else 'red', 
                                  alpha=1.0,zorder=2))
@@ -416,12 +416,12 @@ def analyze_and_plot_stocks(today, future_days=0):
             ax1.plot(range(len(data)), data[f'EMA_{window}'], 
                     label=f'EMA_{window}', 
                     alpha=0.5 if window != 3 else 1,
-                    linewidth=2 if window == 3 else 1, color='green')
+                    linewidth=2 if window == 3 else 1, color='green',zorder=1)
         for window in range(27, 52, 2):
             ax1.plot(range(len(data)), data[f'EMA_{window}'], 
                     label=f'EMA_{window}', 
                     alpha=0.5 if window != 3 else 1,
-                    linewidth=2 if window == 3 else 1, color='red')
+                    linewidth=2 if window == 3 else 1, color='red',zorder=1)
 
 
         # MACD and Fitted Line Plot
@@ -522,7 +522,7 @@ def run_post_process(deploy_mode):
         today = datetime.now(edt).strftime('%Y%m%d')
         print('today',today)
     else:
-        today = '20241108'
+        today = '20241101'
     analyze_and_plot_stocks(today, future_days=0)
 
 if __name__ == "__main__":

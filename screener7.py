@@ -257,7 +257,7 @@ def analyze_and_plot_stocks(today, future_days=0):
     today_date = datetime.strptime(today, '%Y%m%d')
 
     time_delta = (realtoday-today_date).days
-    print(time_delta)
+    future_days = time_delta
     os.makedirs(f"./static/images/{today}", exist_ok=True)
 
 
@@ -391,7 +391,7 @@ def analyze_and_plot_stocks(today, future_days=0):
             continue
         
         #if MACD_hist_slope <0.02:continue
-        if MACD_hist_slope <0.15:continue
+        #if MACD_hist_slope <0.15:continue
 
 
         if crossover_days>22:continue
@@ -402,13 +402,29 @@ def analyze_and_plot_stocks(today, future_days=0):
         tot_filtered += 1
         if filtered==0:continue
 
-        # Fit line on MACD histogram
-        p, days_to_positive = fit_line_and_predict(data['MACD_hist'].values[-3:])
+        add_technical_indicators(data_for_check)
+        check_meantrend = (data_for_check['RSI_6']+100-data_for_check['WR_6']+data_for_check['kdj_k'])/3
+        check_x_range = np.arange(len(data_for_check))
+        check_meanWR = (data_for_check['WR_6']+data_for_check['WR_10'])/2
+        check_valid_mask = ~np.isnan(check_meanWR)
+        check_x_valid = check_x_range[check_valid_mask]           # Filtered x-values without NaNs
+        check_y_valid = check_meanWR[check_valid_mask]      # Filtered WR_6 values without NaNs
+        check_hist_valid = data_for_check['MACD_hist'][check_valid_mask]
+        check_buy_points,check_sell_points = find_buy_sell_points(check_x_valid,check_y_valid,check_hist_valid)
+        check_buy_points7,check_sell_points7 = find_buy_sell_points7(check_x_valid,check_meantrend[check_valid_mask],check_hist_valid)
+        check_nearest_buy = check_x_valid[-1]-check_buy_points[-1]
+        check_nearest_buy7 = check_x_valid[-1]-check_buy_points7[-1]
+        if check_nearest_buy>1 and check_nearest_buy7>1:
+            continue
+        min_buy = min(check_nearest_buy,check_nearest_buy7)
+        sel_idx+=1
+        print(f'|{sel_idx:>4}/{total_stocks}|{stockticker:<5}|f:{tot_filtered:<2}|{stock_capitalizations[idx-1][1]:<3.1f}B|BP:{min_buy}')
+        filtered_file.write(f"{stockticker},{market_cap}\n")
+        continue
 
         add_technical_indicators(data)
         meantrend = (data['RSI_6']+100-data['WR_6']+data['kdj_k'])/3
         x_range = np.arange(len(data))
-        # Mask NaN values in 'WR_6' to get valid data points
         meanWR = (data['WR_6']+data['WR_10'])/2
         valid_mask = ~np.isnan(meanWR)
         x_valid = x_range[valid_mask]           # Filtered x-values without NaNs
@@ -545,7 +561,7 @@ def run_function_twices(deploy_mode):
         print('today',today)
         analyze_and_plot_stocks(today, future_days=0)
     else:
-        today = '20241108'
+        today = '20241101'
     analyze_and_plot_stocks(today, future_days=0)
     if deploy_mode == 1:
         run_post_process(1)

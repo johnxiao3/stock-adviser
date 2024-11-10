@@ -155,11 +155,17 @@ def save_starred():
     data = request.json
     date = data['date']
     starred_images = data['starred']
+    ratings = data.get('ratings', {})  # Get ratings if present, empty dict if not
     
-    # Save to a file in the same directory as the images
+    # Save to a JSON file in the same directory as the images
     filepath = os.path.join('static', 'images', date, 'starred.json')
+    save_data = {
+        'starred': starred_images,
+        'ratings': ratings
+    }
+    
     with open(filepath, 'w') as f:
-        json.dump(starred_images, f)
+        json.dump(save_data, f)
     
     return jsonify({'success': True})
 

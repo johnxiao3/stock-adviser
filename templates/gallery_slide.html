@@ -118,6 +118,38 @@
             background-color: #FFD700;
         }
 
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .star {
+            font-size: 24px;
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.2s;
+        }
+
+        .star.active {
+            color: #FFD700;
+        }
+
+        #image-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
         .switch {
             position: relative;
             display: inline-block;
@@ -200,6 +232,13 @@
             <button id="zoomOutBtn">−</button>
             <button id="starBtn">⭐</button>
         </div>
+        <div class="star-rating" id="starRating">
+                <span class="star" data-rating="1">★</span>
+                <span class="star" data-rating="2">★</span>
+                <span class="star" data-rating="3">★</span>
+                <span class="star" data-rating="4">★</span>
+                <span class="star" data-rating="5">★</span>
+            </div>
         <div class="image-wrapper" id="imageWrapper">
             <img id="galleryImage" src="" alt="Loading image...">
         </div>
@@ -213,6 +252,7 @@
         let starredImages = new Set();
         let filteredImageIndices = [];
         let showingStarredOnly = false;
+        let imageRatings = new Map();
 
         function loadStarredImages() {
             const saved = localStorage.getItem(`starred-${date}`);
@@ -221,9 +261,61 @@
             }
         }
 
+        function loadRatings() {
+            const saved = localStorage.getItem(`ratings-${date}`);
+            if (saved) {
+                imageRatings = new Map(JSON.parse(saved));
+            }
+        }
+
+        function saveRatings() {
+            localStorage.setItem(`ratings-${date}`, JSON.stringify([...imageRatings]));
+        }
+
         function saveStarredImages() {
             localStorage.setItem(`starred-${date}`, JSON.stringify([...starredImages]));
         }
+
+        async function saveToServer() {
+            try {
+                await fetch('/api/save-starred', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        starred: [...starredImages],
+                        ratings: Object.fromEntries(imageRatings)
+                    })
+                });
+            } catch (error) {
+                console.error("Error saving data:", error);
+            }
+        }
+
+        function updateStarRating(fileName) {
+            const rating = imageRatings.get(fileName) || 0;
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        document.getElementById('starRating').addEventListener('click', async (e) => {
+            if (e.target.classList.contains('star')) {
+                const rating = parseInt(e.target.dataset.rating);
+                const fileName = document.getElementById('imageName').textContent;
+                imageRatings.set(fileName, rating);
+                updateStarRating(fileName);
+                saveRatings();
+                await saveToServer();
+            }
+        });
 
         async function saveStarredToServer() {
             try {
@@ -288,6 +380,7 @@
                     } else {
                         starBtn.classList.remove('starred');
                     }
+                    updateStarRating(fileName);
                 }
             } catch (error) {
                 console.error("Error loading image:", error);
@@ -316,6 +409,7 @@
 
         // Initialize
         loadStarredImages();
+        loadRatings();
         updateFilteredImages();
 
         // Event Listeners
