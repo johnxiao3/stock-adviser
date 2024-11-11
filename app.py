@@ -156,32 +156,63 @@ def save_starred():
     date = data['date']
     starred_images = data['starred']
     ratings = data.get('ratings', {})  # Get ratings if present, empty dict if not
+    notes = data.get('notes', {})      # Get notes if present, empty dict if not
     
     # Save to a JSON file in the same directory as the images
     filepath = os.path.join('static', 'images', date, 'starred.json')
     save_data = {
         'starred': starred_images,
-        'ratings': ratings
+        'ratings': ratings,
+        'notes': notes
     }
     
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
     with open(filepath, 'w') as f:
-        json.dump(save_data, f)
+        json.dump(save_data, f, indent=2)  # Added indent for better readability
     
     return jsonify({'success': True})
-# This is an example function to read starred images and ratings from a JSON file.
+
 def load_starred_data(date):
     try:
-        # Assume we have a JSON file storing starred data by date.
-        # File format: { "2024-11-08": { "starred": ["image1.png", "image2.png"], "ratings": {"image1.png": 4, "image2.png": 5} } }
-        
+        # File format now includes notes:
+        # {
+        #   "starred": ["image1.png", "image2.png"],
+        #   "ratings": {"image1.png": 4, "image2.png": 5},
+        #   "notes": {"image1.png": "This is a note", "image2.png": "Another note"}
+        # }
         filepath = os.path.join('static', 'images', date, 'starred.json')
-        #print(date,filepath)
+        print(f"Loading starred data for date {date} from {filepath}")
+        
         with open(filepath, 'r') as file:
             data = json.load(file)
-        #print(data)
-        return data #data.get(date, {"starred": [], "ratings": {}})
+            print(f"Loaded data: {data}")
+            
+            # Ensure all expected fields exist, even if file is from old version
+            if 'starred' not in data:
+                data['starred'] = []
+            if 'ratings' not in data:
+                data['ratings'] = {}
+            if 'notes' not in data:
+                data['notes'] = {}
+                
+            return data
+            
     except FileNotFoundError:
-        return {"starred": [], "ratings": {}}
+        print(f"No starred data found for date {date}")
+        return {
+            "starred": [],
+            "ratings": {},
+            "notes": {}
+        }
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON for date {date}: {e}")
+        return {
+            "starred": [],
+            "ratings": {},
+            "notes": {}
+        }
 
 @app.route('/api/get-starred', methods=['GET'])
 def get_starred():
@@ -189,15 +220,17 @@ def get_starred():
     date = request.args.get('date')
     if not date:
         return jsonify({"error": "Date parameter is required"}), 400
-
+        
     # Load starred data for the specified date
     starred_data = load_starred_data(date)
     
-    # Return JSON response with starred images and ratings
+    # Return JSON response with starred images, ratings, and notes
     response = {
         "starred": starred_data["starred"],
-        "ratings": starred_data["ratings"]
+        "ratings": starred_data["ratings"],
+        "notes": starred_data["notes"]
     }
+    
     return jsonify(response)
 
 if __name__ == '__main__':

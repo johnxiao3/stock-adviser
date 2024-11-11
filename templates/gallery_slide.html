@@ -99,24 +99,6 @@
             justify-content: center;
         }
 
-        #starBtn {
-            padding: 8px;
-            font-size: 16px;
-            width: 32px;
-            height: 32px;
-            background-color: #f0f0f0;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #starBtn.starred {
-            background-color: #FFD700;
-        }
 
         .star-rating {
             display: flex;
@@ -202,6 +184,124 @@
             font-size: 0.9em;
             margin-left: 5px;
         }
+
+        .notes-button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #008CBA;
+            color: white;
+            
+        }
+
+        .edit-button {
+            background-color: #4CAF50;
+            min-width: 100px;
+        }
+
+        #image-controls {
+            position: fixed;
+            top: 20px;  /* Moved to top */
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .rating-notes-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 0px;
+            border-radius: 0px;
+            width: 500px;
+        }
+
+        .star-rating-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 5px;
+        }
+
+        .notes-container {
+            margin-top: 10px;
+        }
+
+        .notes-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .notes-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .notes-input {
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        .notes-display {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 5px;
+            border: 1px solid transparent;
+            min-width: 200px;
+            max-width: 400px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .star {
+            font-size: 24px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .star.active {
+            color: #FFD700;
+        }
+
+        #starBtn {
+            padding: 8px;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #starBtn.starred {
+            background-color: #FFD700;
+        }
     </style>
 </head>
 <body>
@@ -235,15 +335,31 @@
         <div id="image-controls">
             <button id="zoomInBtn">+</button>
             <button id="zoomOutBtn">−</button>
-            <button id="starBtn">⭐</button>
         </div>
-        <div class="star-rating" id="starRating">
-            <span class="star" data-rating="1">★</span>
-            <span class="star" data-rating="2">★</span>
-            <span class="star" data-rating="3">★</span>
-            <span class="star" data-rating="4">★</span>
-            <span class="star" data-rating="5">★</span>
+        <div class="rating-notes-container">
+            <div class="star-rating-row">
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+                <button id="starBtn">⭐</button>
+                <div class="notes-container">
+                    <div class="notes-header">
+                        <div class="notes-buttons">
+                            <button id="editNotesBtn" class="notes-button edit-button">Edit Notes</button>
+                            <button id="saveNotesBtn" class="notes-button" style="display: none;">Save Notes</button>
+                        </div>
+                        <strong>Notes:</strong>
+                        <div id="notesDisplay" class="notes-display"></div>
+                    </div>
+                    <textarea id="notesInput" class="notes-input" placeholder="Add notes..." style="display: none;"></textarea>
+                </div>
+            </div>
         </div>
+
         <div class="image-wrapper" id="imageWrapper">
             <img id="galleryImage" src="" alt="Loading image...">
         </div>
@@ -258,23 +374,153 @@
         let filteredImageIndices = [];
         let showingStarredOnly = false;
         let imageRatings = new Map();
-
-        function updateStarredCount() {
-            const starredCount = document.getElementById('starredCount');
-            starredCount.textContent = starredImages.size;
-        }
+        let imageNotes = new Map();
 
         async function fetchDataFromServer() {
             try {
                 const response = await fetch(`/api/get-starred?date=${date}`);
                 const data = await response.json();
-                //console.log("Received data from server:", data); // Add logging
+                
+                starredImages = new Set(data.starred || []);
+                imageRatings = new Map(Object.entries(data.ratings || {}));
+                imageNotes = new Map(Object.entries(data.notes || {}));
+
+                updateStarredCount();
+                updateFilteredImages();
+                saveStarredImages();
+                saveRatings();
+                saveNotes();
+
+            } catch (error) {
+                console.error("Error fetching data from server:", error);
+            }
+        }
+
+        function loadNotes() {
+            const saved = localStorage.getItem(`notes-${date}`);
+            if (saved) {
+                imageNotes = new Map(JSON.parse(saved));
+            }
+        }
+
+        function saveNotes() {
+            localStorage.setItem(`notes-${date}`, JSON.stringify([...imageNotes]));
+        }
+
+        async function saveToServer() {
+            try {
+                await fetch('/api/save-starred', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        starred: [...starredImages],
+                        ratings: Object.fromEntries(imageRatings),
+                        notes: Object.fromEntries(imageNotes)
+                    })
+                });
+            } catch (error) {
+                console.error("Error saving to server:", error);
+            }
+        }
+
+        function updateNotes(fileName) {
+            const notes = imageNotes.get(fileName) || '';
+            const notesDisplay = document.getElementById('notesDisplay');
+            const notesInput = document.getElementById('notesInput');
+            
+            notesDisplay.textContent = notes;
+            notesInput.value = notes;
+        }
+
+        async function loadImage(index) {
+            try {
+                const response = await fetch(`/api/images?date=${date}&index=${index}&limit=1`);
+                const data = await response.json();
+                if (data.images.length > 0) {
+                    const galleryImage = document.getElementById('galleryImage');
+                    galleryImage.src = data.images[0];
+                    updateZoom();
+
+                    if (showingStarredOnly) {
+                        document.getElementById('currentIndex').textContent = currentIndex + 1;
+                    } else {
+                        document.getElementById('currentIndex').textContent = index + 1;
+                    }
+
+                    const fileName = data.images[0].split('/').pop();
+                    document.getElementById('imageName').textContent = fileName;
+
+                    const starBtn = document.getElementById('starBtn');
+                    if (starredImages.has(fileName)) {
+                        starBtn.classList.add('starred');
+                    } else {
+                        starBtn.classList.remove('starred');
+                    }
+                    updateStarRating(fileName);
+                    updateNotes(fileName);
+                }
+            } catch (error) {
+                console.error("Error loading image:", error);
+            }
+        }
+
+        // Add event listeners for notes functionality
+        document.getElementById('editNotesBtn').addEventListener('click', () => {
+            const notesDisplay = document.getElementById('notesDisplay');
+            const notesInput = document.getElementById('notesInput');
+            const editBtn = document.getElementById('editNotesBtn');
+            const saveBtn = document.getElementById('saveNotesBtn');
+
+            notesDisplay.style.display = 'none';
+            notesInput.style.display = 'block';
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'block';
+        });
+
+        document.getElementById('saveNotesBtn').addEventListener('click', async () => {
+            const fileName = document.getElementById('imageName').textContent;
+            const notesInput = document.getElementById('notesInput');
+            const notesDisplay = document.getElementById('notesDisplay');
+            const editBtn = document.getElementById('editNotesBtn');
+            const saveBtn = document.getElementById('saveNotesBtn');
+
+            const notes = notesInput.value.trim();
+            if (notes) {
+                imageNotes.set(fileName, notes);
+            } else {
+                imageNotes.delete(fileName);
+            }
+
+            notesDisplay.style.display = 'block';
+            notesInput.style.display = 'none';
+            editBtn.style.display = 'block';
+            saveBtn.style.display = 'none';
+
+            updateNotes(fileName);
+            saveNotes();
+            await saveToServer();
+        });
+
+
+        function updateStarredCount() {
+            const starredCount = document.getElementById('starredCount');
+            starredCount.textContent = starredImages.size;
+        }
+/*
+        async function fetchDataFromServer() {
+            try {
+                const response = await fetch(`/api/get-starred?date=${date}`);
+                const data = await response.json();
+                console.log("Received data from server:", data); // Add logging
 
                 // Initialize starred images and ratings
                 starredImages = new Set(data.starred || []); // Add fallback empty array
                 imageRatings = new Map(Object.entries(data.ratings || {})); // Add fallback empty object
 
-                //console.log("Starred images count:", starredImages.size); // Add logging
+                console.log("Starred images count:", starredImages.size); // Add logging
                 updateStarredCount();
                 updateFilteredImages();
                 saveStarredImages();
@@ -283,7 +529,7 @@
             } catch (error) {
                 console.error("Error fetching data from server:", error);
             }
-        }
+        }*/
 
         function loadRatings() {
             const saved = localStorage.getItem(`ratings-${date}`);
@@ -362,7 +608,7 @@
                 imageControls.style.right = '10px';
             }
         }
-
+/*
         async function loadImage(index) {
             try {
                 const response = await fetch(`/api/images?date=${date}&index=${index}&limit=1`);
@@ -393,7 +639,7 @@
                 console.error("Error loading image:", error);
             }
         }
-
+*/
         async function updateFilteredImages() {
             if (showingStarredOnly) {
                 const response = await fetch(`/api/images?date=${date}&index=0&limit=${totalImages}`);
