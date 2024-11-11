@@ -96,7 +96,8 @@ def plot_candlestick(ax, data):
         low_price = data['Low'].iloc[idx]
         
         # Use integer index instead of date
-        ax.plot([idx, idx], [low_price, high_price], color='black',linewidth=1,zorder=1)
+        ax.plot([idx, idx], [low_price, high_price], color='green' if close_price >= open_price else 'red',
+                linewidth=2,zorder=1)
         ax.add_patch(plt.Rectangle((idx - 0.3, min(open_price, close_price)), 
                                  0.6, 
                                  abs(close_price - open_price),
@@ -392,7 +393,7 @@ def analyze_and_plot_stocks(today, future_days=0):
 
         # Bottom group with separate shared x-axis (ax4, ax5)
         gs_bottom = fig.add_gridspec(2, 1, 
-            height_ratios=[1, 1], 
+            height_ratios=[2, 1], 
             hspace=0.00,         # Vertical space between subplots in bottom group
             bottom=0.05,          # Bottom position of the bottom group
             top=0.42,             # Top position of the bottom group
@@ -469,8 +470,8 @@ def analyze_and_plot_stocks(today, future_days=0):
         ax3.axhline(30, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
         ax3.axhline(70, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
         ax3.axhline(50, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
-        ax3.set_ylabel('RSI', color='black')
-        ax4.set_ylabel('WR', color='black')
+        ax3.set_ylabel('WR', color='black')
+        ax4.set_ylabel('Weekly', color='black')
 
  
         # Set minor grid for additional lines every two data points
@@ -522,7 +523,7 @@ def run_post_process(deploy_mode):
         today = datetime.now(edt).strftime('%Y%m%d')
         print('today',today)
     else:
-        today = '20241101'
+        today = '20241108'
     analyze_and_plot_stocks(today, future_days=0)
 
 if __name__ == "__main__":
