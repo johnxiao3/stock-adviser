@@ -7,15 +7,42 @@
         body {
             margin: 0;
             padding: 20px;
+            padding-top: 60px; /* Add space for the header */
+            transition: padding-top 0.3s ease; /* Smooth transition for padding */
+        }
+
+        body.header-hidden {
+            padding-top: 20px; /* Reduced padding when header is hidden */
         }
 
         .header-container {
-            position: sticky;
+            position: fixed; /* Change from sticky to fixed */
             top: 0;
+            left: 0;
+            right: 0;
             background: white;
-            padding: 10px 0;
+            padding: 10px 20px; /* Add horizontal padding */
             z-index: 100;
             border-bottom: 1px solid #ddd;
+            transition: transform 0.3s ease;
+        }
+
+        .header-container.hidden {
+            transform: translateY(-100%);
+        }
+
+        /* Update the toggle button position */
+        .header-toggle {
+            position: fixed;
+            top: 0;
+            right: 20px;
+            padding: 5px 10px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 0 0 4px 4px;
+            cursor: pointer;
+            z-index: 101;
         }
 
         .control-panel {
@@ -66,7 +93,7 @@
 
         img {
             max-width: 100%;
-            max-height: 80vh;
+            max-height: 200vh;
             display: block;
         }
 
@@ -98,7 +125,52 @@
             align-items: center;
             justify-content: center;
         }
+.rating-notes-container {
+    position: fixed;
+    top: 50px;  /* Adjust based on your header height */
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 4px;
+    width: 70%;
+    z-index: 1000;
+    transition: top 0.3s ease; /* Smooth transition when header toggles */
+}
 
+/* Add this class for when header is hidden */
+.rating-notes-container.header-hidden {
+    top: 0px;
+}
+
+/* Update the width for better floating display */
+.notes-container {
+    margin-top: 5px;
+    width: 100%;
+}
+
+.notes-display {
+    max-width: 80%; /* Limit width when floating */
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.notes-input {
+    width: calc(100% - 16px); /* Account for padding */
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Make the star rating row more compact */
+.star-rating-row {
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Update the stars to be more visible on top of images */
+.star {
+    font-size: 20px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
 
         .star-rating {
             display: flex;
@@ -108,30 +180,19 @@
             border-radius: 4px;
             margin-top: 5px;
         }
-
-        .star {
-            font-size: 24px;
-            cursor: pointer;
-            color: #ccc;
-            transition: color 0.2s;
-        }
-
         .star.active {
             color: #FFD700;
         }
-
         #image-controls {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-
         .controls-row {
             display: flex;
             gap: 5px;
             margin-bottom: 5px;
         }
-
         .switch {
             position: relative;
             display: inline-block;
@@ -171,12 +232,10 @@
         input:checked + .slider:before {
             transform: translateX(26px);
         }
-
         .title {
             margin: 10px 0;
             font-size: 1.2em;
         }
-
         .starred-count {
             background-color: #FFD700;
             padding: 2px 8px;
@@ -184,7 +243,6 @@
             font-size: 0.9em;
             margin-left: 5px;
         }
-
         .notes-button {
             padding: 5px 10px;
             border: none;
@@ -194,97 +252,20 @@
             color: white;
             
         }
-
         .edit-button {
             background-color: #4CAF50;
             min-width: 100px;
         }
-
-        #image-controls {
-            position: fixed;
-            top: 20px;  /* Moved to top */
-            right: 20px;
-            display: flex;
-            gap: 5px;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px;
-            border-radius: 4px;
-            z-index: 1000;
-        }
-
         .zoom-controls {
             display: flex;
             gap: 5px;
         }
-
-        .rating-notes-container {
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 0px;
-            border-radius: 0px;
-            width: 500px;
-        }
-
-        .star-rating-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .star-rating {
-            display: flex;
-            gap: 5px;
-        }
-
-        .notes-container {
-            margin-top: 10px;
-        }
-
         .notes-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 5px;
         }
-
-        .notes-buttons {
-            display: flex;
-            gap: 5px;
-        }
-
-        .notes-input {
-            width: 100%;
-            min-height: 60px;
-            margin-bottom: 5px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            resize: vertical;
-        }
-
-        .notes-display {
-            flex-grow: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 5px;
-            border: 1px solid transparent;
-            min-width: 70%;
-            max-width: 100%;
-            margin: 0;
-            line-height: 1.5;
-        }
-
-        .star {
-            font-size: 24px;
-            cursor: pointer;
-            color: #ccc;
-        }
-
-        .star.active {
-            color: #FFD700;
-        }
-
         #starBtn {
             padding: 8px;
             font-size: 16px;
@@ -298,17 +279,26 @@
             align-items: center;
             justify-content: center;
         }
-
         #starBtn.starred {
             background-color: #FFD700;
+        }
+
+        #updateBtn {
+            background-color: #28a745;  /* Green color for update */
+            color: white;
+        }
+        #updateBtn.loading {
+            opacity: 0.7;
+            cursor: wait;
         }
     </style>
 </head>
 <body>
-    <div class="header-container">
+    <button id="toggleHeader" class="header-toggle">↑</button>
+    <div class="header-container" id="headerContainer">
         <div class="title">
             <div class="control-panel">
-                Slideshow for {{ date }} - <span id="currentIndex">1</span>/<span id="totalCount">{{total_images}}</span>
+                {{ date }} - <span id="currentIndex">1</span>/<span id="totalCount">{{total_images}}</span>
                 <span class="starred-count">Starred: <span id="starredCount">0</span></span>
                 : <span id="imageName">a.png</span>
 
@@ -323,9 +313,12 @@
                 <div class="nav-buttons">
                     <button id="homeBtn">Home</button>
                     <button id="firstBtn">First</button>
-                    <button id="prevBtn">Previous</button>
-                    <button id="nextBtn">Next</button>
-                    <button id="downloadBtn">Download Selected</button>
+                    <button id="prevBtn"><</button>
+                    <button id="nextBtn">></button>
+                    <button id="downloadBtn">Download</button>
+                    <button id="updateBtn" class="update-btn">Update</button>
+
+
                 </div>
             </div>
         </div>
@@ -375,6 +368,20 @@
         let showingStarredOnly = false;
         let imageRatings = new Map();
         let imageNotes = new Map();
+
+        // Add header toggle functionality
+        const toggleHeader = document.getElementById('toggleHeader');
+        const headerContainer = document.getElementById('headerContainer');
+        const ratingNotesContainer = document.querySelector('.rating-notes-container');
+        let isHeaderVisible = true;
+
+        toggleHeader.addEventListener('click', () => {
+            isHeaderVisible = !isHeaderVisible;
+            headerContainer.classList.toggle('hidden');
+            document.body.classList.toggle('header-hidden');
+            ratingNotesContainer.classList.toggle('header-hidden');
+            toggleHeader.textContent = isHeaderVisible ? '↑' : '↓';
+        });
 
         async function fetchDataFromServer() {
             try {
@@ -602,11 +609,11 @@
             const wrapper_rect = wrapper.getBoundingClientRect();
             const scale_offset = (zoomLevel - 1) * wrapper_rect.width / 2;
             
-            if (zoomLevel > 1) {
-                imageControls.style.right = `${10 + scale_offset}px`;
-            } else {
-                imageControls.style.right = '10px';
-            }
+            //if (zoomLevel > 1) {
+            //   imageControls.style.right = `${10 + scale_offset}px`;
+            //} else {
+            //    imageControls.style.right = '10px';
+            //}
         }
 /*
         async function loadImage(index) {
@@ -743,6 +750,48 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        });
+
+        document.getElementById("updateBtn").addEventListener("click", async () => {
+            const updateBtn = document.getElementById("updateBtn");
+            const fileName = document.getElementById('imageName').textContent;
+            
+            // Disable button and show loading state
+            updateBtn.disabled = true;
+            updateBtn.classList.add('loading');
+            updateBtn.textContent = 'Updating...';
+            
+            try {
+                // Call the update endpoint
+                const response = await fetch('/api/update-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        filename: fileName
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Update failed');
+                }
+                
+                // Reload the current image with a cache-busting parameter
+                const galleryImage = document.getElementById('galleryImage');
+                const currentSrc = galleryImage.src.split('?')[0];  // Remove any existing cache-buster
+                galleryImage.src = `${currentSrc}?t=${new Date().getTime()}`;  // Add new cache-buster
+                
+            } catch (error) {
+                console.error("Error updating image:", error);
+                alert('Failed to update image. Please try again.');
+            } finally {
+                // Reset button state
+                updateBtn.disabled = false;
+                updateBtn.classList.remove('loading');
+                updateBtn.textContent = 'Update';
+            }
         });
 
         // Initialize on page load

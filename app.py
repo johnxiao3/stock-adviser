@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import time
 import pytz
 import json
+from post_filtered import update_png
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -232,6 +233,31 @@ def get_starred():
     }
     
     return jsonify(response)
+
+
+@app.route('/api/update-image', methods=['POST'])
+def update_image_endpoint():
+    try:
+        data = request.get_json()
+        date = data.get('date')
+        filename = data.get('filename')
+        
+        if not date or not filename:
+            return jsonify({'error': 'Missing date or filename'}), 400
+            
+        # Call your update function
+        result = update_png(date, filename)
+        result = True
+        print(date,filename)
+        
+        if result:
+            return jsonify({'success': True}), 200
+        else:
+            return jsonify({'error': 'Update failed'}), 500
+            
+    except Exception as e:
+        print(f"Error updating image: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", threaded=True)
