@@ -52,6 +52,28 @@
             padding: 5px 10px;
             margin-right: 10px;
         }
+        #image-controls {
+            position: fixed;
+            top: 100px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 4px;
+            z-index: 1000;
+            transform-origin: top right;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #gallery-container {
+            position: relative;
+            text-align: center;
+            margin: 100px auto;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -62,15 +84,40 @@
             <input type="text" id="stockTicker" placeholder="Enter stock ticker">
             <button onclick="generateImage()">Generate Image</button>
         </div>
-        
-        <div class="image-container">
-            <img id="stockImage" src="{{ url_for('static', filename='images/generated_view.png') }}" 
-                 onerror="this.style.display='none'" 
-                 onload="this.style.display='block'">
+
+        <div id="gallery-container">
+            <div id="image-controls">
+                <button id="zoomInBtn">+</button>
+                <button id="zoomOutBtn">−</button>
+            </div>
+            
+    
+            <div class="image-container">
+                <img id="stockImage" src="{{ url_for('static', filename='images/generated_view.png') }}" 
+                     onerror="this.style.display='none'" 
+                     onload="this.style.display='block'">
+            </div>
         </div>
+        
+
     </div>
 
     <script>
+        let zoomLevel = 1;
+        function updateZoom() {
+            const wrapper = document.getElementById('stockImage');
+            wrapper.style.transform = `scale(${zoomLevel})`;
+            
+            const imageControls = document.getElementById('image-controls');
+            const wrapper_rect = wrapper.getBoundingClientRect();
+            const scale_offset = (zoomLevel - 1) * wrapper_rect.width / 2;
+            
+            //if (zoomLevel > 1) {
+            //   imageControls.style.right = `${10 + scale_offset}px`;
+            //} else {
+            //    imageControls.style.right = '10px';
+            //}
+        }
         function generateImage() {
             const ticker = document.getElementById('stockTicker').value;
             if (!ticker) {
@@ -127,6 +174,18 @@
                 img.style.display = 'none';
             }
         };
+
+        document.getElementById("zoomInBtn").addEventListener("click", () => {
+            zoomLevel += 0.1;
+            updateZoom();
+        });
+
+        document.getElementById("zoomOutBtn").addEventListener("click", () => {
+            if (zoomLevel > 0.4) {
+                zoomLevel -= 0.1;
+                updateZoom();
+            }
+        });
     </script>
 </body>
 </html>

@@ -542,27 +542,6 @@
             const starredCount = document.getElementById('starredCount');
             starredCount.textContent = starredImages.size;
         }
-/*
-        async function fetchDataFromServer() {
-            try {
-                const response = await fetch(`/api/get-starred?date=${date}`);
-                const data = await response.json();
-                console.log("Received data from server:", data); // Add logging
-
-                // Initialize starred images and ratings
-                starredImages = new Set(data.starred || []); // Add fallback empty array
-                imageRatings = new Map(Object.entries(data.ratings || {})); // Add fallback empty object
-
-                console.log("Starred images count:", starredImages.size); // Add logging
-                updateStarredCount();
-                updateFilteredImages();
-                saveStarredImages();
-                saveRatings();
-
-            } catch (error) {
-                console.error("Error fetching data from server:", error);
-            }
-        }*/
 
         function loadRatings() {
             const saved = localStorage.getItem(`ratings-${date}`);
@@ -641,38 +620,7 @@
             //    imageControls.style.right = '10px';
             //}
         }
-/*
-        async function loadImage(index) {
-            try {
-                const response = await fetch(`/api/images?date=${date}&index=${index}&limit=1`);
-                const data = await response.json();
-                if (data.images.length > 0) {
-                    const galleryImage = document.getElementById('galleryImage');
-                    galleryImage.src = data.images[0];
-                    updateZoom();
 
-                    if (showingStarredOnly) {
-                        document.getElementById('currentIndex').textContent = currentIndex + 1;
-                    } else {
-                        document.getElementById('currentIndex').textContent = index + 1;
-                    }
-
-                    const fileName = data.images[0].split('/').pop();
-                    document.getElementById('imageName').textContent = fileName;
-
-                    const starBtn = document.getElementById('starBtn');
-                    if (starredImages.has(fileName)) {
-                        starBtn.classList.add('starred');
-                    } else {
-                        starBtn.classList.remove('starred');
-                    }
-                    updateStarRating(fileName);
-                }
-            } catch (error) {
-                console.error("Error loading image:", error);
-            }
-        }
-*/
         async function updateFilteredImages() {
             if (showingStarredOnly) {
                 const response = await fetch(`/api/images?date=${date}&index=0&limit=${totalImages}`);
