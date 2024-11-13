@@ -312,7 +312,8 @@ def check_holding_stocks(deploy_mode):
         for stock_ticker in selected_stock['stock_tickers']:
             delete_stock(stock_ticker)
 
-if len(sys.argv) > 1:
-    check_holding_stocks(1)
-else:
-    check_holding_stocks(0)
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        check_holding_stocks(1)
+    else:
+        check_holding_stocks(0)

@@ -8,6 +8,7 @@ import time
 import pytz
 import json
 from post_filtered import update_png
+from check_selling_status import check_holding_stocks
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -25,14 +26,13 @@ job_status = {
 def run_scheduled_task():
     global job_status
     # Run job_script.py as a detached process
+    check_holding_stocks(1)
+    time.sleep(2)  # Simulate task duration
     subprocess.Popen(['python3', 'screener7.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.Popen(['python3', 'check_selling_status.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    #subprocess.Popen(['python3', 'check_selling_status.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Run the main task
-    print("Running main task")
-    time.sleep(2)  # Simulate task duration
     job_status["last_run"] = datetime.now(edt)
-
     # Update the next run time (next business day)
     next_run_time = get_next_business_day()
     job_status["next_run"] = next_run_time
@@ -52,7 +52,7 @@ def get_next_business_day():
         next_day = now + timedelta(days=1)
         while next_day.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
             next_day += timedelta(days=1)
-        return next_day.replace(hour=16, minute=40, second=0, microsecond=0)
+        return next_day.replace(hour=16, minute=1, second=0, microsecond=0)
 
 next_run_time = get_next_business_day()
 # Set up the job
@@ -96,6 +96,10 @@ def log_page():
         log_content = "Log file not found."
     
     return render_template('log_page.html', log_content=log_content)
+
+@app.route('/onestock')
+def one_stock():
+    return render_template('one_stock.html')
 
 
 # Define the path to your images directory
@@ -246,7 +250,7 @@ def update_image_endpoint():
             return jsonify({'error': 'Missing date or filename'}), 400
             
         # Call your update function
-        result = update_png(date, filename)
+        result = update_png(date, filename,0)
         result = True
         print(date,filename)
         
@@ -259,5 +263,30 @@ def update_image_endpoint():
         print(f"Error updating image: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/update-image1', methods=['POST'])
+def update_image_endpoint1():
+    try:
+        data = request.get_json()
+        date = data.get('date')
+        filename = data.get('filename')
+        
+        if not date or not filename:
+            return jsonify({'error': 'Missing date or filename'}), 400
+            
+        # Call your update function
+        print('dddd')
+        print(date,filename)
+        result = update_png(date, filename,1)
+        print('aaaaa')
+        result = True
+        
+        if result:
+            return jsonify({'success': True}), 200
+        else:
+            return jsonify({'error': 'Update failed'}), 500
+            
+    except Exception as e:
+        print(f"Error updating image: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", threaded=True)

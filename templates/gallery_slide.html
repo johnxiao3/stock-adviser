@@ -81,13 +81,13 @@
         #gallery-container {
             position: relative;
             text-align: center;
-            margin: 20px auto;
+            margin: 100px auto;
             overflow: hidden;
         }
 
         .image-wrapper {
             position: relative;
-            display: inline-block;
+            /*display: inline-block;*/
             transform-origin: center center;
         }
 
@@ -108,6 +108,10 @@
             border-radius: 4px;
             z-index: 1000;
             transform-origin: top right;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         #zoomInBtn, #zoomOutBtn {
@@ -125,52 +129,54 @@
             align-items: center;
             justify-content: center;
         }
-.rating-notes-container {
-    position: fixed;
-    top: 50px;  /* Adjust based on your header height */
-    left: 20px;
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    border-radius: 4px;
-    width: 70%;
-    z-index: 1000;
-    transition: top 0.3s ease; /* Smooth transition when header toggles */
-}
+        .rating-notes-container {
+            position: fixed;
+            top: 50px;  /* Adjust based on your header height */
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            width: 70%;
+            z-index: 1000;
+            transition: top 0.3s ease; /* Smooth transition when header toggles */
+        }
 
-/* Add this class for when header is hidden */
-.rating-notes-container.header-hidden {
-    top: 0px;
-}
+        /* Add this class for when header is hidden */
+        .rating-notes-container.header-hidden {
+            top: 0px;
+        }
 
-/* Update the width for better floating display */
-.notes-container {
-    margin-top: 5px;
-    width: 100%;
-}
+        /* Update the width for better floating display */
+        .notes-container {
+            margin-top: 5px;
+            width: 70%;
+            align-items: left;
+        }
 
-.notes-display {
-    max-width: 80%; /* Limit width when floating */
-    background-color: rgba(255, 255, 255, 0.9);
-}
+        .notes-display {
+            max-width: 100%; /* Limit width when floating */
+            background-color: rgba(255, 255, 255, 0.9);
+            align-items: left;
+        }
 
-.notes-input {
-    width: calc(100% - 16px); /* Account for padding */
-    background-color: rgba(255, 255, 255, 0.9);
-}
+        .notes-input {
+            width: calc(100% - 16px); /* Account for padding */
+            background-color: rgba(255, 255, 255, 0.9);
+        }
 
-/* Make the star rating row more compact */
-.star-rating-row {
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+        /* Make the star rating row more compact */
+        .star-rating-row {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-/* Update the stars to be more visible on top of images */
-.star {
-    font-size: 20px;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
-}
+        /* Update the stars to be more visible on top of images */
+        .star {
+            font-size: 20px;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+        }
 
         .star-rating {
             display: flex;
@@ -183,11 +189,7 @@
         .star.active {
             color: #FFD700;
         }
-        #image-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+
         .controls-row {
             display: flex;
             gap: 5px;
@@ -262,7 +264,7 @@
         }
         .notes-header {
             display: flex;
-            align-items: center;
+            align-items: left;
             justify-content: space-between;
             margin-bottom: 5px;
         }
@@ -317,19 +319,11 @@
                     <button id="nextBtn">></button>
                     <button id="downloadBtn">Download</button>
                     <button id="updateBtn" class="update-btn">Update</button>
-
-
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="gallery-container">
-        <div id="image-controls">
-            <button id="zoomInBtn">+</button>
-            <button id="zoomOutBtn">−</button>
-        </div>
-        <div class="rating-notes-container">
+            
+            
+            
             <div class="star-rating-row">
                 <div class="star-rating" id="starRating">
                     <span class="star" data-rating="1">★</span>
@@ -352,6 +346,38 @@
                 </div>
             </div>
         </div>
+    </div>
+    <!--
+    <div class="rating-notes-container">
+            <div class="star-rating-row">
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+                <button id="starBtn">⭐</button>
+                <div class="notes-container">
+                    <div class="notes-header">
+                        <div class="notes-buttons">
+                            <button id="editNotesBtn" class="notes-button edit-button">Edit Notes</button>
+                            <button id="saveNotesBtn" class="notes-button" style="display: none;">Save Notes</button>
+                        </div>
+                        <strong>Notes:</strong>
+                        <div id="notesDisplay" class="notes-display"></div>
+                    </div>
+                    <textarea id="notesInput" class="notes-input" placeholder="Add notes..." style="display: none;"></textarea>
+                </div>
+            </div>
+        </div>
+    -->
+    <div id="gallery-container">
+        <div id="image-controls">
+            <button id="zoomInBtn">+</button>
+            <button id="zoomOutBtn">−</button>
+        </div>
+        
 
         <div class="image-wrapper" id="imageWrapper">
             <img id="galleryImage" src="" alt="Loading image...">

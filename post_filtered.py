@@ -301,7 +301,7 @@ def find_buy_sell_points7(x_valid,y_valid,hist_valid):
         i += 1  # Move to the next point
     return buy_points,sell_points
 
-def update_png(today,filename):
+def update_png(today,filename,mode): #mode=0 means daily
     #future_days = 0  # Adjust as needed
     realtoday = datetime.today()
     today_date = datetime.strptime(today, '%Y%m%d')
@@ -309,8 +309,8 @@ def update_png(today,filename):
 
     #future_days = (realtoday-today_date).days
     future_days = calculate_future_business_days(realtodaystr, today)
-
-    os.makedirs(f"./static/images/{today}/", exist_ok=True)
+    if mode==0:
+        os.makedirs(f"./static/images/{today}/", exist_ok=True)
 
     stockticker = filename[:-4].split('_')[1]
 
@@ -490,6 +490,9 @@ def update_png(today,filename):
     ax3.axhline(70, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
     ax3.axhline(50, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
     ax3.set_ylabel('WR', color='black')
+    ax1.set_ylabel('Daily', color='black')
+    ax2.set_ylabel('MACD', color='black')
+    ax5.set_ylabel('MACD', color='black')
     ax4.set_ylabel('Weekly', color='black')
 
 
@@ -532,7 +535,11 @@ def update_png(today,filename):
     # Save plot
     ax1.set_title(f'{filename}|{market_cap:.1f}B|Crossover Days: {crossover_days}| {decrease_percentage:.1f}')
     plt.tight_layout()
-    plt.savefig(f'./static/images/{today}/{filename}')
+    print(f'ffff  ./static/images/{today}/{filename}')
+    if mode ==0:
+        plt.savefig(f'./static/images/{today}/{filename}')
+    else:
+        plt.savefig(f'./static/images/generated_view.png')
     plt.close()
 
 

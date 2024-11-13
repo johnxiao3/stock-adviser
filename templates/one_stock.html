@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Visualization</title>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .image-container {
+            text-align: center;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        #toggleButton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        #toggleButton:hover {
+            background-color: #0056b3;
+        }
+        
+        input, button {
+            padding: 5px 10px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="toggleButton">Toggle Controls</button>
+        
+        <div class="controls" id="controlsPanel">
+            <input type="text" id="stockTicker" placeholder="Enter stock ticker">
+            <button onclick="generateImage()">Generate Image</button>
+        </div>
+        
+        <div class="image-container">
+            <img id="stockImage" src="{{ url_for('static', filename='images/generated_view.png') }}" 
+                 onerror="this.style.display='none'" 
+                 onload="this.style.display='block'">
+        </div>
+    </div>
+
+    <script>
+        function generateImage() {
+            const ticker = document.getElementById('stockTicker').value;
+            if (!ticker) {
+                alert('Please enter a stock ticker');
+                return;
+            }
+
+            // Get today's date in YYYYMMDD format
+            const today = new Date();
+            const dateString = today.getFullYear() +
+                String(today.getMonth() + 1).padStart(2, '0') +
+                String(today.getDate()).padStart(2, '0');
+
+            const requestData = {
+                date: dateString,
+                filename: `001_${ticker}.png`
+            };
+
+            fetch('/api/update-image1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reload the image with a cache-busting parameter
+                const img = document.getElementById('stockImage');
+                img.src = `{{ url_for('static', filename='images/generated_view.png') }}?t=${new Date().getTime()}`;
+                img.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error generating image');
+            });
+        }
+
+        // Toggle controls visibility
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            const controls = document.getElementById('controlsPanel');
+            controls.classList.toggle('hidden');
+        });
+
+        // Check if image exists on page load
+        window.onload = function() {
+            const img = document.getElementById('stockImage');
+            if (img.style.display === 'none') {
+                img.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
