@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Visualization</title>
     <style>
+
+        .back-link { display: inline-block; margin-top: 20px; padding: 5 10px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .back-link:hover { background-color: #0056b3; }
         .container {
             max-width: 100%;
             margin: 0 auto;
             padding: 20px;
         }
-        
+        #updateBtn.loading {
+            opacity: 0.7;
+            cursor: wait;
+        }
         .controls {
             margin-bottom: 20px;
             padding: 10px;
@@ -82,7 +88,9 @@
         
         <div class="controls" id="controlsPanel">
             <input type="text" id="stockTicker" placeholder="Enter stock ticker">
-            <button onclick="generateImage()">Generate Image</button>
+            <button id="updateBtn" >Generate Image</button>
+            <a href="/" class="back-link">Back to Home</a>
+
         </div>
 
         <div id="gallery-container">
@@ -118,13 +126,65 @@
             //    imageControls.style.right = '10px';
             //}
         }
+
+        document.getElementById("updateBtn").addEventListener("click", async () => {
+            const updateBtn = document.getElementById("updateBtn");
+            const ticker = document.getElementById('stockTicker').value;
+
+            const today = new Date();
+            const dateString = today.getFullYear() +
+                String(today.getMonth() + 1).padStart(2, '0') +
+                String(today.getDate()).padStart(2, '0');
+
+            const requestData = {
+                date: dateString,
+                filename: `001_${ticker}.png`
+            };
+            
+            // Disable button and show loading state
+            updateBtn.disabled = true;
+            updateBtn.classList.add('loading');
+            updateBtn.textContent = 'Updating...';
+            
+            try {
+                // Call the update endpoint
+                const response = await fetch('/api/update-image1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Update failed');
+                }
+                
+                // Reload the current image with a cache-busting parameter
+                const img = document.getElementById('stockImage');
+                img.src = `{{ url_for('static', filename='images/generated_view.png') }}?t=${new Date().getTime()}`;
+                img.style.display = 'block';                
+            } catch (error) {
+                console.error("Error updating image:", error);
+                alert('Failed to update image. Please try again.');
+            } finally {
+                // Reset button state
+                updateBtn.disabled = false;
+                updateBtn.classList.remove('loading');
+                updateBtn.textContent = 'Generate Image';
+            }
+        });
+/*
         function generateImage() {
             const ticker = document.getElementById('stockTicker').value;
+            const updateBtn = document.getElementById("updateBtn");
+
             if (!ticker) {
                 alert('Please enter a stock ticker');
                 return;
             }
-
+            updateBtn.disabled = true;
+            updateBtn.classList.add('loading');
             // Get today's date in YYYYMMDD format
             const today = new Date();
             const dateString = today.getFullYear() +
@@ -154,13 +214,16 @@
                 const img = document.getElementById('stockImage');
                 img.src = `{{ url_for('static', filename='images/generated_view.png') }}?t=${new Date().getTime()}`;
                 img.style.display = 'block';
+
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error generating image');
             });
+            updateBtn.disabled = false;
+            updateBtn.classList.remove('loading');
         }
-
+*/
         // Toggle controls visibility
         document.getElementById('toggleButton').addEventListener('click', function() {
             const controls = document.getElementById('controlsPanel');
