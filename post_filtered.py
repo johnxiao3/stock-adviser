@@ -824,13 +824,13 @@ def run_post_process(deploy_mode):
         today = datetime.now(edt).strftime('%Y%m%d')
         print('today',today)
     else:
-        today = '20241108'
+        today = '20241115'
     analyze_and_plot_stocks(today, future_days=0)
 
 if __name__ == "__main__":
-    #if len(sys.argv) > 1:
-    #    run_post_process(1)
-    #else:
-    #    run_post_process(0)
+    if len(sys.argv) > 1:
+        run_post_process(1) # deploy mode
+    else:
+        run_post_process(0)
     
-    update_png('20241114','001_IBM.png',1)
+    #update_png('20241114','001_IBM.png',1)
