@@ -301,7 +301,7 @@ def find_buy_sell_points7(x_valid,y_valid,hist_valid):
         i += 1  # Move to the next point
     return buy_points,sell_points
 
-def update_png(today,filename,mode): #mode=0 means daily
+def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
     #future_days = 0  # Adjust as needed
     realtoday = datetime.today()
     today_date = datetime.strptime(today, '%Y%m%d')
@@ -393,7 +393,11 @@ def update_png(today,filename,mode): #mode=0 means daily
     buy_points7,sell_points7 = find_buy_sell_points7(x_valid,meantrend[valid_mask],hist_valid)
     nearest_buy = x_valid[-1]-buy_points[-1]
     nearest_buy7 = x_valid[-1]-buy_points7[-1]
+    nearest_sell = x_valid[-1]-sell_points[-1]
+    nearest_sell7 = x_valid[-1]-sell_points7[-1]
     min_buy = min(nearest_buy,nearest_buy7)
+    min_sell = min(nearest_sell,nearest_sell7)
+    print(min_buy,min_sell)
     # Create the main figure
     fig = plt.figure(figsize=(19, 10))
     # Top group with shared x-axis (ax1, ax2, ax3)
@@ -824,7 +828,9 @@ def run_post_process(deploy_mode):
     analyze_and_plot_stocks(today, future_days=0)
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        run_post_process(1)
-    else:
-        run_post_process(0)
+    #if len(sys.argv) > 1:
+    #    run_post_process(1)
+    #else:
+    #    run_post_process(0)
+    
+    update_png('20241114','001_IBM.png',1)

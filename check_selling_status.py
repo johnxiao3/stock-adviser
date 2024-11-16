@@ -235,51 +235,16 @@ def find_sell_stocks(today, future_days=0):
             data.index = data.index.tz_localize(None)
         except:
             continue
-        # Filter data to only include up to `today`
-        if future_days ==0 :
-            data_for_check = data.copy()
-        else:
-            data_for_check = data[data.index < today_date].copy()
-        try:
-            today_close_price = data_for_check['Close'].iloc[-1]
-        except:
-            continue
 
-
-
-
-        # Calculate EMAs and MACD
-        for window in range(3, 26, 2):
-            data_for_check[f'EMA_{window}'] = ema(data_for_check['Close'], window)
-        for window in range(27, 52, 2):
-            data_for_check[f'EMA_{window}'] = ema(data_for_check['Close'], window)
-        data_for_check['MACD'], data_for_check['MACD_signal'], data_for_check['MACD_hist'] = calculate_macd(data_for_check['Close'])
-
-        # Calculate EMAs and MACD
-        for window in range(3, 26, 2):
-            data[f'EMA_{window}'] = ema(data['Close'], window)
-        for window in range(27, 52, 2):
-            data[f'EMA_{window}'] = ema(data['Close'], window)
+        today_close_price = data['Close'].iloc[-1]
         data['MACD'], data['MACD_signal'], data['MACD_hist'] = calculate_macd(data['Close'])
-        
-        # Calculate the daily percentage change
-        data['Pct_Change'] = data['Close'].pct_change() * 100  # Convert to percentage
-
-        # Check EMA conditions
-        current_day_idx = -1
-        green_ema = data_for_check['EMA_3'].values[current_day_idx]
-        all_other_ema_values = [data_for_check[f'EMA_{window}'].values[current_day_idx] for window in range(5, 51, 2)]
-
-        if all(green_ema < ema_value for ema_value in all_other_ema_values):
-            note = 'GreenLow'
-
         add_technical_indicators(data)
 
         x_range = np.arange(len(data))
         # Mask NaN values in 'WR_6' to get valid data points
         meanWR = (data['WR_6']+data['WR_10'])/2
         valid_mask = ~np.isnan(meanWR)
-        x_valid = x_range[valid_mask]           # Filtered x-values without NaNs
+        x_valid = x_range[valid_mask]     # Filtered x-values without NaNs
         y_valid = meanWR[valid_mask]      # Filtered WR_6 values without NaNs
         hist_valid = data['MACD_hist'][valid_mask]
         buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
@@ -298,7 +263,7 @@ def check_holding_stocks(deploy_mode):
     if deploy_mode:
         today = datetime.today().strftime('%Y%m%d')
     else:
-        today = '20241108'
+        today = '20241114'
     selected_stock = find_sell_stocks(today, future_days=0)
     # Example logic to print and log the message
     if len(selected_stock['stock_tickers']) == 0:
