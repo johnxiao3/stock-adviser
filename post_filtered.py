@@ -397,7 +397,7 @@ def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
     nearest_sell7 = x_valid[-1]-sell_points7[-1]
     min_buy = min(nearest_buy,nearest_buy7)
     min_sell = min(nearest_sell,nearest_sell7)
-    print(min_buy,min_sell)
+    print('BP:',min_buy,'SP:',min_sell)
     # Create the main figure
     fig = plt.figure(figsize=(19, 10))
     # Top group with shared x-axis (ax1, ax2, ax3)
@@ -539,7 +539,6 @@ def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
     # Save plot
     ax1.set_title(f'{filename}|{market_cap:.1f}B|Crossover Days: {crossover_days}| {decrease_percentage:.1f}')
     plt.tight_layout()
-    print(f'ffff  ./static/images/{today}/{filename}')
     if mode ==0:
         plt.savefig(f'./static/images/{today}/{filename}')
     else:
@@ -552,7 +551,7 @@ def analyze_and_plot_stocks(today, future_days=0):
     #future_days = 0  # Adjust as needed
     realtoday = datetime.today()
     #today = '20241101'
-    filtered_file_path = f'./static/images/{today}/{today}_selected1.txt'
+    filtered_file_path = f'./static/images/{today}/{today}_selected.txt'
     filtered_file_path1 = f'./static/images/{today}/{today}_selected2.txt'
 
     today_date = datetime.strptime(today, '%Y%m%d')
@@ -562,15 +561,15 @@ def analyze_and_plot_stocks(today, future_days=0):
     os.makedirs(f"./static/images/{today}/", exist_ok=True)
 
 
-    filtered = 0
-    # Load the NASDAQ screener CSV file # Check if the filtered file exists
     if os.path.exists(filtered_file_path):
-        filtered = 1
         stock_capitalizations = []
         with open(filtered_file_path, 'r') as f:
             for line in f:
                 stock_id, cap_str = line.strip().split(',')
-                market_cap = float(cap_str) / 1e9  # Convert to billions
+                try:
+                    market_cap = float(cap_str) / 1e9  # Convert to billions
+                except:
+                    market_cap = 0
                 stock_capitalizations.append((stock_id, market_cap))
         # Step 2: Sort by market capitalization in descending order
         stock_capitalizations.sort(key=lambda x: x[1], reverse=True)
@@ -579,244 +578,11 @@ def analyze_and_plot_stocks(today, future_days=0):
     else:
         return 0
 
-    total_stocks = len(tickers)
-    tot_filtered = 0
     filtered_file = open(filtered_file_path1, 'w')
-    sel_idx=0
     for idx, stockticker in enumerate(tickers, start=1):
-
-        stock = yf.Ticker(stockticker)
-        data = stock.history(period="6mo")
-
-        wkdata = stock.history(period="2y",interval="1wk")
-        if wkdata.empty:
-            wkdata = stock.history(period="max",interval="1wk")
-
-        # Get the info dictionary, which sometimes contains the 'country' key
-        market_cap = 0
-        try:
-            info = stock.info
-            market_cap = info.get('marketCap')
-            country = info.get("country", "Country information not available")
-            if country=='China':continue
-        except:
-            pass
-
-
-        try:
-            data.index = data.index.tz_localize(None)
-        except:
-            continue
-        # Filter data to only include up to `today`
-        if future_days ==0 :
-            data_for_check = data.copy()
-        else:
-            data_for_check = data[data.index < today_date].copy()
-        try:
-            today_close_price = data_for_check['Close'].iloc[-1]
-        except:
-            continue
-
-        # Store trading dates for x-axis formatting
-        trading_dates = data.index.tolist()
-        # Append future dates for plotting
-        future_dates = pd.date_range(start=trading_dates[-1], periods=2 + 1)[1:]
-        extended_dates = trading_dates + list(future_dates)
-
-        # Calculate EMAs and MACD
-        for window in range(3, 26, 2):
-            data_for_check[f'EMA_{window}'] = ema(data_for_check['Close'], window)
-        for window in range(27, 52, 2):
-            data_for_check[f'EMA_{window}'] = ema(data_for_check['Close'], window)
-        data_for_check['MACD'], data_for_check['MACD_signal'], data_for_check['MACD_hist'] = calculate_macd(data_for_check['Close'])
-
-        # Calculate EMAs and MACD
-        for window in range(3, 26, 2):
-            data[f'EMA_{window}'] = ema(data['Close'], window)
-        for window in range(27, 52, 2):
-            data[f'EMA_{window}'] = ema(data['Close'], window)
-        data['MACD'], data['MACD_signal'], data['MACD_hist'] = calculate_macd(data['Close'])
-        
-        # Calculate the daily percentage change
-        data['Pct_Change'] = data['Close'].pct_change() * 100  # Convert to percentage
-
-        # Count the days with a decrease in the close price
-        decrease_days = (data['Pct_Change'] <= 0).sum()
-
-        # Calculate the total number of trading days
-        total_days = data['Pct_Change'].count()  # Ignore NaN from pct_change()
-
-        # Calculate the percentage of decrease days
-        decrease_percentage = (decrease_days / total_days) * 100
-
-        # Proceed with your conditions and analysis logic here as before
-        # Calculate crossover days
-        last_crossover_idx, crossover_sign = calculate_crossover_days(data_for_check['MACD_hist'].values)
-        if last_crossover_idx is not None:
-            crossover_days = len(data_for_check) - last_crossover_idx
-        else:
-            crossover_days = 'N/A'
-
-        tot_filtered += 1
-        add_technical_indicators(data)
-        meantrend = (data['RSI_6']+100-data['WR_6']+data['kdj_k'])/3
-        x_range = np.arange(len(data))
-        # Mask NaN values in 'WR_6' to get valid data points
-        meanWR = (data['WR_6']+data['WR_10'])/2
-        valid_mask = ~np.isnan(meanWR)
-        x_valid = x_range[valid_mask]           # Filtered x-values without NaNs
-        y_valid = meanWR[valid_mask]      # Filtered WR_6 values without NaNs
-        hist_valid = data['MACD_hist'][valid_mask]
-        buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
-        buy_points7,sell_points7 = find_buy_sell_points7(x_valid,meantrend[valid_mask],hist_valid)
-        nearest_buy = x_valid[-1]-buy_points[-1]
-        nearest_buy7 = x_valid[-1]-buy_points7[-1]
-        min_buy = min(nearest_buy,nearest_buy7)
-        sel_idx+=1
-        print(f'|{sel_idx:>4}/{total_stocks}|{stockticker:<5}|f:{tot_filtered:<2}|{stock_capitalizations[idx-1][1]:<3.1f}B|BP:{min_buy}')
-        filtered_file.write(f"{stockticker},{market_cap}\n")
-
-        # Create the main figure
-        fig = plt.figure(figsize=(19, 8))
-
-        # Top group with shared x-axis (ax1, ax2, ax3)
-        gs_top = fig.add_gridspec(3, 1, 
-            height_ratios=[2, 1, 1], 
-            hspace=0.00,            # Vertical space between subplots in top group
-            bottom=0.45,            # Bottom position of the top group
-            top=0.95,               # Top position (added to reduce top margin)
-            left=0.05,               # Left margin
-            right=0.95              # Right margin
-            )
-        ax1 = fig.add_subplot(gs_top[0])
-        ax2 = fig.add_subplot(gs_top[1], sharex=ax1)
-        ax3 = fig.add_subplot(gs_top[2], sharex=ax1)
-
-        # Bottom group with separate shared x-axis (ax4, ax5)
-        gs_bottom = fig.add_gridspec(2, 1, 
-            height_ratios=[2, 1], 
-            hspace=0.00,         # Vertical space between subplots in bottom group
-            bottom=0.05,          # Bottom position of the bottom group
-            top=0.42,             # Top position of the bottom group
-            left=0.05,            # Left margin
-            right=0.95           # Right margin
-            )
-        ax4 = fig.add_subplot(gs_bottom[0])
-        ax5 = fig.add_subplot(gs_bottom[1], sharex=ax4)
-
-        # Optionally, hide x-axis labels for upper plots in each group
-        ax1.tick_params(labelbottom=False)
-        ax2.tick_params(labelbottom=False)
-        ax4.tick_params(labelbottom=False)
-
-
-        # Plot candlestick data
-        plot_candlestick(ax1, data)
-
-        # Plot EMAs
-        for window in range(3, 26, 2):
-            ax1.plot(range(len(data)), data[f'EMA_{window}'], 
-                    label=f'EMA_{window}', 
-                    alpha=0.5 if window != 3 else 1,
-                    linewidth=2 if window == 3 else 1, color='green',zorder=1)
-        for window in range(27, 52, 2):
-            ax1.plot(range(len(data)), data[f'EMA_{window}'], 
-                    label=f'EMA_{window}', 
-                    alpha=0.5 if window != 3 else 1,
-                    linewidth=2 if window == 3 else 1, color='red',zorder=1)
-
-
-        # MACD and Fitted Line Plot
-        x_range = range(len(data))
-        ax2.plot(x_range, data['MACD'], label='MACD', color='blue')
-        ax2.plot(x_range, data['MACD_signal'], label='Signal', color='orange')
-
-        # Plot MACD Histogram with Color Conditions
-        color_condition = np.where(data['Close'].diff() > 0, 'green', 'red')
-        ax2.bar(x_range, data['MACD_hist'], color=color_condition)
-        ax2.axhline(0, color='black', linewidth=1, linestyle='-')
-        #ax2.axvline(x=len(data) - 0.5- future_days, linestyle='--', color='blue', label='Today')
-
-        # Extend x-axis with future dates and set custom format
-        ax2.set_xlim([0, len(extended_dates) - 1])
-        ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: format_date(x, p, trading_dates)))
-        plt.setp(ax2.xaxis.get_majorticklabels(), rotation=0, ha='right')
-
-        # Show tick markers every `n_ticks` intervals
-        n_ticks = 10
-        tick_locations = np.linspace(0, len(data)-1 -future_days, n_ticks, dtype=int)
-        ax2.set_xticks(tick_locations)
-        ax2.set_xticklabels([extended_dates[i].strftime('%Y-%m-%d') for i in tick_locations], rotation=0, ha='right')
-
-
-        # New subplot for RSI, WR, and Volume
-        #ax3 = fig.add_subplot(3, 1, 3)  # Create a new subplot below ax2
-
-        # Plot mean
-        ax3.plot(x_range, 100-meantrend, label='RSI 6', color='blue', linestyle='-',linewidth=0.8,marker='.',markersize=3)
-        #ax3.plot(x_range, 100-data['WR_6'], label='WR 6', color='purple', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-        #ax3.plot(x_range, data['kdj_k'], label='kdj k', color='red', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-        ax3_right = ax3.twinx() 
-        #ax3_right.plot(x_range, data['Close'], label='RSI 6', color='orange', linestyle='-',linewidth=0.8,marker='.',markersize=3)
-
-        #ax3.plot(x_range, data['RSI_12'], label='RSI 12', color='orange', linestyle='-',linewidth=0.8,marker='.',markersize=3)
-        #ax3.plot(x_range, data['RSI_24'], label='RSI 24', color='green', linestyle='-', linewidth=0.8,marker='.',markersize=3)
-
-
-        # Plot Volume
-        #ax6 = ax1.twinx()  # Create a twin y-axis for volume
-        ax3_right.bar(x_range, data['Volume'], alpha=0.3, color=color_condition, label='Volume', width=0.75)
-
-        # Formatting ax3
-        ax3.axhline(30, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
-        ax3.axhline(70, color='red', linestyle='--', linewidth=0.8)  # Overbought level for RSI
-        ax3.axhline(50, color='green', linestyle='--', linewidth=0.8)  # Oversold level for RSI
-        ax3.set_ylabel('WR', color='black')
-        ax4.set_ylabel('Weekly', color='black')
-
- 
-        # Set minor grid for additional lines every two data points
-        for ax in [ax1,ax2, ax3, ax4, ax5]:
-            ax.grid(True, alpha=1)
-            ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))  # Set minor grid every 2 data points
-            ax.grid(True, which='minor', alpha=0.5)  # Enable minor grid with desired transparency
-
-     
-        for bp in buy_points:
-            ax1.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            ax2.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            #ax3.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            #ax4.axvline(x=bp, color='green', linestyle='--', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-        for sp in sell_points:
-            ax1.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            ax2.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            #ax3.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-            #ax4.axvline(x=sp, color='red', linestyle='--', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-        for bp in buy_points7:
-            ax3.axvline(x=bp, color='green', linestyle='-', label='Buy Point' if 'Buy Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-        for sp in sell_points7:
-            ax3.axvline(x=sp, color='red', linestyle='-', label='Sell Point' if 'Sell Point' not in plt.gca().get_legend_handles_labels()[1] else "")
-
-        #for wkdata:
-        wkdata['MACD'], wkdata['MACD_signal'], wkdata['MACD_hist'] = calculate_macd(wkdata['Close'])
-        plot_candlestick(ax4, wkdata)
-        
-        # MACD and Fitted Line Plot
-        wk_x_range = range(len(wkdata))
-        ax4.set_xlim([-1, len(wk_x_range)])
-
-        ax5.plot(wk_x_range, wkdata['MACD'], label='MACD', color='blue')
-        ax5.plot(wk_x_range, wkdata['MACD_signal'], label='Signal', color='orange')
-        wk_color_condition = np.where(wkdata['Close'].diff() > 0, 'green', 'red')
-        ax5.bar(wk_x_range, wkdata['MACD_hist'], color=wk_color_condition)
-        ax5.axhline(0, color='black', linewidth=1, linestyle='-')
-
-        # Save plot
-        rank_str = f"{sel_idx:03}"
-        ax1.set_title(f'{rank_str}|{stockticker}|{stock_capitalizations[idx-1][1]:.1f}B|Crossover Days: {crossover_days}| {decrease_percentage:.1f}')
-        plt.tight_layout()
-        plt.savefig(f'./static/images/{today}/{rank_str}_{stockticker}.png')
-        plt.close()
+        print(f'{idx}/{len(tickers)}')
+        stockticker_name = f"{idx:03}_{stockticker}.png"
+        update_png(today,stockticker_name,mode=0)
     filtered_file.close()
 
 def run_post_process(deploy_mode):
