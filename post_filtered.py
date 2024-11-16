@@ -327,7 +327,7 @@ def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
         info = stock.info
         market_cap = info.get('marketCap')
     except:
-        pass
+        market_cap = 0
 
 
     try:
