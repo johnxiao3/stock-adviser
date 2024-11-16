@@ -537,7 +537,7 @@ def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
     ax5.axhline(0, color='black', linewidth=1, linestyle='-')
 
     # Save plot
-    ax1.set_title(f'{filename}|{market_cap:.1f}B|Crossover Days: {crossover_days}| {decrease_percentage:.1f}')
+    ax1.set_title(f'{filename}|{market_cap:.1f}B|')
     plt.tight_layout()
     if mode ==0:
         plt.savefig(f'./static/images/{today}/{filename}')
