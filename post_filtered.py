@@ -328,7 +328,7 @@ def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
         market_cap = info.get('marketCap')
     except:
         market_cap = 0
-
+    if market_cap is None: market_cap=0
 
     try:
         data.index = data.index.tz_localize(None)
@@ -397,7 +397,7 @@ def update_png(today,filename,mode): #mode=0 means daily, 1 means only one file
     nearest_sell7 = x_valid[-1]-sell_points7[-1]
     min_buy = min(nearest_buy,nearest_buy7)
     min_sell = min(nearest_sell,nearest_sell7)
-    print('BP:',min_buy,'SP:',min_sell)
+    print(stockticker,'BP:',min_buy,'SP:',min_sell)
     # Create the main figure
     fig = plt.figure(figsize=(19, 10))
     # Top group with shared x-axis (ax1, ax2, ax3)
