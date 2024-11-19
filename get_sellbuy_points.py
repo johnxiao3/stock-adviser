@@ -178,7 +178,10 @@ def find_selected_stocks(today, future_days=0):
         with open(filtered_file_path, 'r') as f:
             for line in f:
                 stock_id, cap_str = line.strip().split(',')
-                market_cap = float(cap_str) / 1e9  # Convert to billions
+                try:
+                    market_cap = float(cap_str) / 1e9  # Convert to billions
+                except:
+                    market_cap = 0
                 stock_capitalizations.append((stock_id, market_cap))
         # Step 2: Sort by market capitalization in descending order
         stock_capitalizations.sort(key=lambda x: x[1], reverse=True)
@@ -371,30 +374,77 @@ def generate_investment_plan(selected_stock, budget):
 
     return investment_plan, budget
 
-def get_buy_stocks(deploy_mode):
-    if deploy_mode:
+def get_buy_stocks(deploy_mode: int, datestr: str = 'aaa', budget: float = 1000.0):
+    """
+    Generate stock investment plans based on different deployment modes.
+    
+    Args:
+        deploy_mode (int): 
+            0: Local run mode
+            1: Server auto-run mode
+            2: Server manual mode
+        datestr (str): Date string in format 'YYYYMMDD'
+        budget (float): Investment budget amount
+    """
+    # Determine date and budget based on mode
+    if deploy_mode == 2:
+        # Server manual mode
+        today = datestr
+        current_budget = float(budget)
+    elif deploy_mode == 1:
+        # Server auto-run mode
         today = datetime.today().strftime('%Y%m%d')
+        current_budget = 983.0
     else:
-        today = '20241106'
-    selected_stock = find_selected_stocks(today, future_days=0)
-    budget = 1000
-    # Call the function to get the investment plan
-    investment_plan, remaining_budget = generate_investment_plan(selected_stock, budget)
+        # Local run mode
+        today = '20241118'
+        current_budget = 983.0
 
-    # Display the investment plan
-    print("Investment Plan:")
-    for stock in investment_plan:
-        print(f"Buy {stock['quantity']} shares of {stock['ticker']} at ${stock['price']:.2f} each")
-        print(f"Total Cost: ${stock['total_cost']:.2f}")
-    print(f"Remaining Budget: ${remaining_budget:.2f}")
+    try:
+        # Get selected stocks for the specified date
+        selected_stocks = find_selected_stocks(today, future_days=0)
+        
+        # Generate investment plan
+        investment_plan, remaining_budget = generate_investment_plan(
+            selected_stocks, 
+            current_budget
+        )
 
+        # Display investment plan
+        print("\nInvestment Plan:")
+        for stock in investment_plan:
+            print(f"Buy {stock['quantity']} shares of {stock['ticker']} "
+                  f"at ${stock['price']:.2f} each")
+            print(f"Total Cost: ${stock['total_cost']:.2f}")
+        print(f"Remaining Budget: ${remaining_budget:.2f}")
 
-    # Save the investment data to a file
-    save_investment_data(investment_plan,'./static/investment_data.json')
+        # Save investment data
+        save_investment_data(investment_plan, './static/investment_data.json')
+        
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        return None
 
+def main():
+    """
+    Main entry point for the script.
+    Handles command line arguments and calls get_buy_stocks with appropriate parameters.
+    """
+    arg_count = len(sys.argv)
+    print('Number of arguments:', arg_count)
+    
+    try:
+        if arg_count == 4:
+            # Manual mode with date and budget specified
+            get_buy_stocks(2, datestr=sys.argv[-2], budget=sys.argv[-1])
+        elif arg_count == 2:
+            # Auto-run mode
+            get_buy_stocks(1)
+        else:
+            # Local run mode
+            get_buy_stocks(0)
+    except Exception as e:
+        print(f"Error in main: {str(e)}")
 
-
-if len(sys.argv) > 1:
-    get_buy_stocks(1)
-else:
-    get_buy_stocks(0)
+if __name__ == "__main__":
+    main()
