@@ -41,13 +41,13 @@ def run_scheduled_task():
 
 # Function to calculate the next business day with the desired time (16:40)
 def get_next_business_day():
-    runtime_hour,runtime_minute = 16,1
+    runtime_hour,runtime_minute = 16,3
     now = datetime.now(edt)
     # Set the desired run time for today
     today_desired_time = now.replace(hour=runtime_hour, minute=runtime_minute, second=0, microsecond=0)
     print('now',now,today_desired_time)
     # If the current time is before today's desired time and it's a weekday, use today
-    if now < today_desired_time and now.weekday() < 5:  # 0-4 are weekdays
+    if now < today_desired_time-timedelta(minutes=1) and now.weekday() < 5:  # 0-4 are weekdays
         return today_desired_time
     else:
         # Otherwise, calculate the next business day
