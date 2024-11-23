@@ -27,6 +27,7 @@ def run_scheduled_task():
     global job_status
     # Run job_script.py as a detached process
     print("run scheduled")
+    time.sleep(20)
     check_holding_stocks(1)
     time.sleep(2)  # Simulate task duration
     subprocess.Popen(['python3', 'screener7.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -41,7 +42,7 @@ def run_scheduled_task():
 
 # Function to calculate the next business day with the desired time (16:40)
 def get_next_business_day():
-    runtime_hour,runtime_minute = 16,3
+    runtime_hour,runtime_minute = 16,4
     now = datetime.now(edt)
     # Set the desired run time for today
     today_desired_time = now.replace(hour=runtime_hour, minute=runtime_minute, second=0, microsecond=0)

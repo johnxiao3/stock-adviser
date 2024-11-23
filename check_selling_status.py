@@ -7,6 +7,7 @@ import numpy as np
 from datetime import datetime
 from scipy.optimize import curve_fit
 import pytz
+import time
 import warnings
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -260,6 +261,7 @@ def find_sell_stocks(today, future_days=0):
     return selected_stock
 
 def check_holding_stocks(deploy_mode):
+    time.sleep(15)
     if deploy_mode:
         today = datetime.today().strftime('%Y%m%d')
     else:
