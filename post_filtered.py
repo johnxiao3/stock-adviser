@@ -565,7 +565,10 @@ def analyze_and_plot_stocks(today, future_days=0):
         stock_capitalizations = []
         with open(filtered_file_path, 'r') as f:
             for line in f:
-                stock_id, cap_str = line.strip().split(',')
+                try:
+                    stock_id, cap_str = line.strip().split(',')
+                except:
+                    continue
                 try:
                     market_cap = float(cap_str) / 1e9  # Convert to billions
                 except:
