@@ -30,7 +30,7 @@ def run_scheduled_task():
     time.sleep(20)
     check_holding_stocks(1)
     time.sleep(2)  # Simulate task duration
-    subprocess.Popen(['python3', 'screener7.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.Popen(['python3', 'screener7.py','1'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     #subprocess.Popen(['python3', 'check_selling_status.py','deploymode'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Run the main task

@@ -585,18 +585,43 @@ def analyze_and_plot_stocks(today, future_days=0):
         update_png(today,stockticker_name,mode=0)
     filtered_file.close()
 
-def run_post_process(deploy_mode):
-    if deploy_mode==1:
+def run_post_process(deploy_mode, manual_date=None):
+    edt = pytz.timezone('America/New_York')
+    
+    if deploy_mode == 1:  # auto deploy mode
         today = datetime.now(edt).strftime('%Y%m%d')
-        print('today',today)
-    else:
+        print('today (auto mode):', today)
+    elif deploy_mode == 2:  # manual deploy mode
+        if manual_date is None:
+            raise ValueError("Manual deploy mode (2) requires a date parameter in YYYYMMDD format")
+        today = manual_date
+        print('today (manual mode):', today)
+    else:  # develop mode (0)
         today = '20241115'
+        print('today (develop mode):', today)
+    
     analyze_and_plot_stocks(today, future_days=0)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        run_post_process(1) # deploy mode
+        mode = int(sys.argv[1])
+        if mode == 2:
+            if len(sys.argv) != 3:
+                print("Error: Manual mode requires a date parameter in YYYYMMDD format")
+                print("Usage: script.py 2 YYYYMMDD")
+                sys.exit(1)
+            manual_date = sys.argv[2]
+            # Basic date format validation
+            if not (len(manual_date) == 8 and manual_date.isdigit()):
+                print("Error: Date must be in YYYYMMDD format")
+                sys.exit(1)
+            run_post_process(2, manual_date)
+        elif mode == 1:
+            run_post_process(1)
+        elif mode == 0:
+            run_post_process(0)
+        else:
+            print("Error: Invalid mode. Use 0 (develop), 1 (auto deploy), or 2 (manual deploy)")
+            sys.exit(1)
     else:
         run_post_process(0)
-    
-    #update_png('20241114','001_IBM.png',1)
