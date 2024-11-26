@@ -10,6 +10,22 @@ import json
 from post_filtered import update_png
 from check_selling_status import check_holding_stocks
 
+# Function to log the information to a file
+def log_to_file(log_message, log_file='./static/log.txt'):
+    # Ensure the log directory exists
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+    # Get the current date and time in EDT
+    edt = pytz.timezone('US/Eastern')
+    current_time = datetime.now(edt).strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    # Create the final message with date and log
+    log_entry = f"{current_time} - {log_message}\n"
+
+    # Open the log file and append the log message
+    with open(log_file, 'a') as f:
+        f.write(log_entry)
+
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
 
@@ -27,7 +43,8 @@ def run_scheduled_task():
     global job_status
     # Run job_script.py as a detached process
     print("run scheduled")
-    time.sleep(20)
+    time.sleep(3)
+    log_to_file("task run once")
     check_holding_stocks(1)
     time.sleep(2)  # Simulate task duration
     subprocess.Popen(['python3', 'screener7.py','1'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -42,7 +59,7 @@ def run_scheduled_task():
 
 # Function to calculate the next business day with the desired time (16:40)
 def get_next_business_day():
-    runtime_hour,runtime_minute = 16,4
+    runtime_hour,runtime_minute = 16,5
     now = datetime.now(edt)
     # Set the desired run time for today
     today_desired_time = now.replace(hour=runtime_hour, minute=runtime_minute, second=0, microsecond=0)
