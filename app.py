@@ -309,5 +309,5 @@ def update_image_endpoint1():
         return jsonify({'error': str(e)}), 500
 if __name__ == '__main__':
     #if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    scheduler.start()
+    #scheduler.start()
     app.run(debug=False,host="0.0.0.0", threaded=True)
