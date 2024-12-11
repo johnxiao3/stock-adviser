@@ -333,8 +333,9 @@ def find_selected_stocks(today, future_days=0):
         buy_points,sell_points = find_buy_sell_points(x_valid,y_valid,hist_valid)
         nearest_buy = x_valid[-1]-buy_points[-1]
         cap = stock_capitalizations[idx-1][1]
-        #print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.0f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|{crossover_sign}{crossover_days:<2} days||')
-        if cap < 10:continue
+        print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.1f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|')
+        #if cap < 10:continue
+        print(nearest_buy.item())
         if nearest_buy.item() == 0:
             selected_stock['stock_prices'].append(today_close_price.item())
             selected_stock['stock_tickers'].append(stockticker)
@@ -397,13 +398,13 @@ def get_buy_stocks(deploy_mode: int, datestr: str = 'aaa', budget: float = 1000.
         current_budget = 983.0
     else:
         # Local run mode
-        today = '20241118'
-        current_budget = 983.0
+        today = '20241210'
+        current_budget = 978.0
 
     try:
         # Get selected stocks for the specified date
         selected_stocks = find_selected_stocks(today, future_days=0)
-        
+        print(selected_stocks)
         # Generate investment plan
         investment_plan, remaining_budget = generate_investment_plan(
             selected_stocks, 
