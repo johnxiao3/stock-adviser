@@ -334,7 +334,7 @@ def find_selected_stocks(today, future_days=0):
         nearest_buy = x_valid[-1]-buy_points[-1]
         cap = stock_capitalizations[idx-1][1]
         #print(f'|{idx:>4}/{total_stocks}|{stockticker:<5}|${today_close_price:<5.0f}|{stock_capitalizations[idx-1][1]:<5.1f}B|BP:{nearest_buy.item():<2}|{crossover_sign}{crossover_days:<2} days||')
-        if cap < 10:break
+        if cap < 10:continue
         if nearest_buy.item() == 0:
             selected_stock['stock_prices'].append(today_close_price.item())
             selected_stock['stock_tickers'].append(stockticker)
@@ -437,6 +437,7 @@ def main():
         if arg_count == 4:
             # Manual mode with date and budget specified
             get_buy_stocks(2, datestr=sys.argv[-2], budget=sys.argv[-1])
+            # useage: python get_sellbuy_point 20241210 999
         elif arg_count == 2:
             # Auto-run mode
             get_buy_stocks(1)

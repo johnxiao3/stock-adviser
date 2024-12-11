@@ -430,7 +430,7 @@ def run_function_twices(deploy_mode):
         print('today',today)
         analyze_and_plot_stocks(today, future_days=0)
     else:
-        today = '20241115'
+        today = '20241129'
     analyze_and_plot_stocks(today, future_days=0)
     if deploy_mode == 1:
         run_post_process(1)
